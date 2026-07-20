@@ -96,3 +96,9 @@ git push origin dev
 - 버그 수정: `fix: 로그인 오류 수정`
 - 문서 수정: `docs: API 문서 업데이트`
 - 코드 리팩토링: `refactor: 로그인 로직 개선`
+
+---
+
+## 아키텍처
+<img width="1789" height="1273" alt="image" src="https://github.com/user-attachments/assets/2f4bed86-5458-4553-b6bf-6767d7f3cd10" />
+
