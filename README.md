@@ -98,7 +98,48 @@ git push origin dev
 - 코드 리팩토링: `refactor: 로그인 로직 개선`
 
 ---
+## 정보
 
-## 아키텍처
-<img width="1789" height="1273" alt="image" src="https://github.com/user-attachments/assets/2f4bed86-5458-4553-b6bf-6767d7f3cd10" />
+### 프로젝트 MVP 및 우선순위
+1. 대기열 진입 -> 예매사이트로 리다이렉션
+2. 공연 예매 기능 
+	1. 예매 기능
+	2. 예매 등록 기능
+	3. 좌석 선택 기능
+	4. 좌석 등록 기능
+3. 관리자 페이지
+	1. 권한별 헤더 (메뉴) 관리
+	2. 사용자 정보 조회 및 비밀번호 초기화
+	3. 등등등
+
+
+
+
+
+
+
+### 사용자 이용 흐름
+
+
+<div style="page-break-after: always;"/>
+
+
+### 간단한 화면 설계
+<img width="1281" height="605" alt="image" src="https://github.com/user-attachments/assets/959be343-60f4-4030-bad1-e28096d5ced5" />
+
+
+### ERD
+<img width="1235" height="647" alt="image" src="https://github.com/user-attachments/assets/d370c4bd-3dc7-4864-a18d-308d49a5d2ca" />
+
+
+### 흐름도
+<img width="706" height="637" alt="image" src="https://github.com/user-attachments/assets/f925fcc3-e0e0-45d0-9d64-b2a075ac8420" />
+
+
+### 아키텍처
+<img width="1133" height="737" alt="image" src="https://github.com/user-attachments/assets/cab50e5b-6b09-4922-8dde-571ac0136e2b" />
+
+
+### API 명세서
+<img width="1547" height="405" alt="image" src="https://github.com/user-attachments/assets/15494303-f906-4a9d-b5a3-565542d51cf3" />
 
