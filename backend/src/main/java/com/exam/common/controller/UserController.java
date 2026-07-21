@@ -39,7 +39,7 @@ public class UserController {
         return Map.of("success", true);
     }
 
-    @PostMapping("/register")
+    @PostMapping("/signup")
     public Map<String, Object> register(@RequestBody UserDTO userDTO) {
         Map<String, Object> result = new HashMap<>();
         try {

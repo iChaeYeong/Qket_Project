@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/performances")
+@RequestMapping("/events")
 public class PerformanceController {
 
     private final PerformanceService performanceService;
