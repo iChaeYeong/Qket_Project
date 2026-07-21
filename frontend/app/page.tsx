@@ -70,7 +70,7 @@ export default async function EventsPage() {
                       {round.roundTime.replace("T", " ")}
                     </span>
 
-                    {round.roundStatus === "OPEN" ? (
+                    {round.roundStatus !== "SOLDOUT" ? (
                       <BookButton
                         roundId={round.roundId}
                         roundTime={round.roundTime}
@@ -78,9 +78,7 @@ export default async function EventsPage() {
                         title={performance.pTitle}
                       />
                     ) : (
-                      <span className={STATUS_CLASS[round.roundStatus]}>
-                        {STATUS_LABEL[round.roundStatus]}
-                      </span>
+                      <span className="badge badgeSoldout">매진</span>
                     )}
                   </div>
                 ))}
