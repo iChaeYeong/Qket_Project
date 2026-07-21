@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/seats")
+@RequestMapping("/schedules")
 public class SeatController {
 
     private final SeatService seatService;
@@ -16,8 +16,8 @@ public class SeatController {
         this.seatService = seatService;
     }
 
-    @GetMapping("/round/{roundId}")
-    public List<SeatDTO> byRound(@PathVariable Long roundId) {
+    @GetMapping("/{scheduleId}/seats")
+    public List<SeatDTO> byRound(@PathVariable("scheduleId") Long roundId) {
         return seatService.getSeatsByRound(roundId);
     }
 }
