@@ -1,8 +1,2 @@
-import { apiFetch } from "./client";
-import type { AccountDTO } from "../data/types";
-
-export async function getAccounts(): Promise<AccountDTO[]> {
-  const res = await apiFetch("/accounts");
-  if (!res.ok) throw new Error("계좌 정보를 불러오지 못했습니다.");
-  return res.json();
-}
+// unused: 계좌(bank) 템플릿 잔재 코드. Qket에서는 사용하지 않음.
+export {};
