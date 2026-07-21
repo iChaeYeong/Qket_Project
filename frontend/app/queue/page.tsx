@@ -1,72 +1,68 @@
+// Client Component — "use client" 필요한 이유:
+//   1. 대기열 상태 폴링 (setInterval, useRef)
+//   2. 대기 순번 실시간 업데이트 (useState: status)
+//   3. 입장 완료 시 페이지 이동 (useRouter)
+//   4. URL 쿼리 파라미터 읽기 (useSearchParams → Suspense 필수)
 "use client";
 
 import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { joinQueue, getQueueStatus } from "@/lib/api/queues";
 import type { QueueStatus } from "@/lib/data/types";
+
+// [TODO-QUEUE-NOTE]
+// 대기열 흐름:
+//   1. 페이지 진입 → POST /api/queues 로 대기열 등록 → queueToken 받기
+//   2. 3초마다 GET /api/queues/{queueToken} 폴링 → position, status 확인
+//   3. status === "ENTERED" 이면 폴링 중단 → /seats/{scheduleId} 로 이동
+//   4. status === "EXPIRED" 이면 폴링 중단 → 에러 메시지 표시
 
 function QueueContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // URL 파라미터: /queue?scheduleId=1&title=공연명
   const scheduleId = Number(searchParams.get("scheduleId") ?? "0");
   const title = searchParams.get("title") ?? "공연";
 
+  // 대기열 상태 (position, estimatedWait, status)
   const [status, setStatus] = useState<QueueStatus | null>(null);
   const [error, setError] = useState("");
+
+  // [TODO-QUEUE-TOKEN] 대기열 토큰 저장용 ref (리렌더링 없이 보관)
   const tokenRef = useRef<string>("");
+
+  // [TODO-QUEUE-INTERVAL] 폴링 인터벌 ref
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // [TODO-QUEUE-STOP] 폴링 중단 함수
   const stopPolling = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
   };
 
+  // [TODO-QUEUE-POLL] 3초마다 대기열 상태 조회
+  // lib/api/queues.ts 의 getQueueStatus(token) 호출 → GET /api/queues/{token}
+  // 응답을 setStatus 에 저장
+  // status === "ENTERED" → stopPolling() 후 1.5초 뒤 router.push(`/seats/${scheduleId}`)
+  // status === "EXPIRED" → stopPolling() 후 setError("대기열이 만료되었습니다.")
   const poll = async (token: string) => {
-    try {
-      const data = await getQueueStatus(token);
-      setStatus(data);
-      if (data.status === "ENTERED") {
-        stopPolling();
-        setTimeout(() => router.push(`/seats/${scheduleId}`), 1500);
-      }
-      if (data.status === "EXPIRED") {
-        stopPolling();
-        setError("대기열이 만료되었습니다. 다시 시도해주세요.");
-      }
-    } catch {
-      // 서버 미연결 시 데모 모드로 카운트다운
-    }
+    // 구현 필요
   };
 
+  // [TODO-QUEUE-JOIN] 페이지 진입 시 대기열 등록
+  // 1. scheduleId 없으면 setError("잘못된 접근입니다.") 후 리턴
+  // 2. lib/api/queues.ts 의 joinQueue(scheduleId) 호출 → POST /api/queues
+  //    응답: { queueToken: "..." }
+  // 3. tokenRef.current = queueToken
+  // 4. poll(queueToken) 즉시 1회 호출
+  // 5. setInterval(() => poll(queueToken), 3000) 로 3초마다 폴링 시작
+  // 6. 백엔드 미연결 시 catch 블록에서 에러 표시 또는 데모 모드
+  // 7. 컴포넌트 언마운트 시 stopPolling() 호출 (return stopPolling)
   useEffect(() => {
-    if (!scheduleId) { setError("잘못된 접근입니다."); return; }
-
-    joinQueue(scheduleId)
-      .then(({ queueToken }) => {
-        tokenRef.current = queueToken;
-        poll(queueToken);
-        intervalRef.current = setInterval(() => poll(queueToken), 3000);
-      })
-      .catch(() => {
-        // 백엔드 미연결 시 데모용 시뮬레이션
-        const demoToken = `demo-${Date.now()}`;
-        tokenRef.current = demoToken;
-        let pos = Math.floor(Math.random() * 80) + 20;
-        setStatus({ queueToken: demoToken, position: pos, estimatedWait: pos * 3, status: "WAITING" });
-        intervalRef.current = setInterval(() => {
-          pos = Math.max(0, pos - Math.floor(Math.random() * 4 + 1));
-          if (pos === 0) {
-            setStatus({ queueToken: demoToken, position: 0, estimatedWait: 0, status: "ENTERED" });
-            stopPolling();
-            setTimeout(() => router.push(`/seats/${scheduleId}`), 1500);
-          } else {
-            setStatus({ queueToken: demoToken, position: pos, estimatedWait: pos * 3, status: "WAITING" });
-          }
-        }, 2000);
-      });
-
+    // 구현 필요
     return stopPolling;
   }, [scheduleId]);
 
+  // 대기시간 포맷 (초 → "약 N초" 또는 "약 N분")
   const formatWait = (seconds: number) => {
     if (seconds < 60) return `약 ${seconds}초`;
     return `약 ${Math.ceil(seconds / 60)}분`;
@@ -81,6 +77,7 @@ function QueueContent() {
 
         {error && <p className="errorMsg">{error}</p>}
 
+        {/* 대기열 진입 중 (status 아직 없음) */}
         {!error && !status && (
           <>
             <div className="queueDots">
@@ -92,6 +89,7 @@ function QueueContent() {
           </>
         )}
 
+        {/* 대기 중 */}
         {status?.status === "WAITING" && (
           <>
             <div className="queuePosition">{status.position.toLocaleString()}</div>
@@ -108,6 +106,7 @@ function QueueContent() {
           </>
         )}
 
+        {/* 입장 완료 */}
         {status?.status === "ENTERED" && (
           <>
             <div className="queueEntered">✅ 입장 가능합니다! 좌석 선택 페이지로 이동합니다...</div>
@@ -123,6 +122,7 @@ function QueueContent() {
   );
 }
 
+// [TODO-QUEUE-SUSPENSE] useSearchParams() 는 Suspense 안에서만 써야 함 — 이 구조 유지
 export default function QueuePage() {
   return (
     <Suspense fallback={

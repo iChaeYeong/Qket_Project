@@ -1,32 +1,16 @@
 package com.exam.reservation.dto;
 
+import lombok.Data;
 import org.apache.ibatis.type.Alias;
 
+@Data
 @Alias("SeatDTO")
 public class SeatDTO {
 
-    Long seatId;
-    Long roundId;
-    String seatRow;
-    String seatColume;
-    String grade;
-    String status;
-
-    public Long getSeatId() { return seatId; }
-    public void setSeatId(Long seatId) { this.seatId = seatId; }
-
-    public Long getRoundId() { return roundId; }
-    public void setRoundId(Long roundId) { this.roundId = roundId; }
-
-    public String getSeatRow() { return seatRow; }
-    public void setSeatRow(String seatRow) { this.seatRow = seatRow; }
-
-    public String getSeatColume() { return seatColume; }
-    public void setSeatColume(String seatColume) { this.seatColume = seatColume; }
-
-    public String getGrade() { return grade; }
-    public void setGrade(String grade) { this.grade = grade; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    private Long seatId;
+    private Long roundId;
+    private String seatRow;
+    private String seatColume;
+    private String grade;
+    private String status;
 }
