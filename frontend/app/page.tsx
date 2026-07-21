@@ -1,60 +1,23 @@
-"use client";
+// Server Component — "use client" 없음
+// 서버에서 실행되므로 useState, useEffect, useRouter 사용 불가
+// 데이터는 async/await 로 직접 fetch, 네비게이션은 <Link> 사용
 
-import { useRouter } from "next/navigation";
-import SiteNav from "@/components/SiteNav";
+import BookButton from "@/components/BookButton";
 
-type Round = { roundId: number; roundTime: string; roundStatus: "OPEN" | "CLOSED" | "SOLDOUT" };
-type Event = { id: number; title: string; location: string; color: string; emoji: string; rounds: Round[] };
-
-const MOCK_EVENTS: Event[] = [
-  {
-    id: 1, title: "BTS WORLD TOUR 2026", location: "서울 올림픽주경기장",
-    color: "linear-gradient(135deg, #7c3aed, #4f46e5)", emoji: "🎤",
-    rounds: [
-      { roundId: 1, roundTime: "2026-08-15 18:00", roundStatus: "OPEN" },
-      { roundId: 2, roundTime: "2026-08-16 18:00", roundStatus: "OPEN" },
-    ],
-  },
-  {
-    id: 2, title: "IU Concert : Hereh", location: "서울 KSPO DOME",
-    color: "linear-gradient(135deg, #0891b2, #0e7490)", emoji: "🎵",
-    rounds: [
-      { roundId: 3, roundTime: "2026-09-05 19:00", roundStatus: "OPEN" },
-      { roundId: 4, roundTime: "2026-09-06 19:00", roundStatus: "SOLDOUT" },
-    ],
-  },
-  {
-    id: 3, title: "뮤지컬 레미제라블", location: "예술의전당 오페라극장",
-    color: "linear-gradient(135deg, #b45309, #92400e)", emoji: "🎭",
-    rounds: [
-      { roundId: 5, roundTime: "2026-09-20 14:00", roundStatus: "OPEN" },
-      { roundId: 6, roundTime: "2026-09-20 19:00", roundStatus: "OPEN" },
-      { roundId: 7, roundTime: "2026-09-21 14:00", roundStatus: "CLOSED" },
-    ],
-  },
-  {
-    id: 4, title: "aespa FAN MEETING 2026", location: "고려대학교 화정체육관",
-    color: "linear-gradient(135deg, #0f766e, #115e59)", emoji: "💚",
-    rounds: [
-      { roundId: 8, roundTime: "2026-10-10 17:00", roundStatus: "OPEN" },
-    ],
-  },
-  {
-    id: 5, title: "서울 재즈 페스티벌", location: "올림픽공원 88잔디마당",
-    color: "linear-gradient(135deg, #be185d, #9d174d)", emoji: "🎷",
-    rounds: [
-      { roundId: 9, roundTime: "2026-10-25 15:00", roundStatus: "OPEN" },
-      { roundId: 10, roundTime: "2026-10-26 15:00", roundStatus: "OPEN" },
-    ],
-  },
-  {
-    id: 6, title: "클래식 갈라 콘서트", location: "롯데콘서트홀",
-    color: "linear-gradient(135deg, #4338ca, #3730a3)", emoji: "🎻",
-    rounds: [
-      { roundId: 11, roundTime: "2026-11-08 19:30", roundStatus: "OPEN" },
-    ],
-  },
-];
+// 백엔드 PerformanceDTO 와 일치
+type Round = {
+  roundId: number;
+  roundTime: string;
+  openTime: string;
+  roundStatus: "OPEN" | "CLOSED" | "SOLDOUT";
+};
+type Performance = {
+  performanceId: number;
+  pTitle: string;
+  pLocation: string;
+  posterUrl: string;
+  rounds: Round[];
+};
 
 const STATUS_LABEL: Record<string, string> = {
   OPEN: "예매 가능",
@@ -68,61 +31,64 @@ const STATUS_CLASS: Record<string, string> = {
   SOLDOUT: "badge badgeSoldout",
 };
 
-export default function EventsPage() {
-  const router = useRouter();
 
-  const handleBook = (roundId: number, title: string, status: string) => {
-    if (status !== "OPEN") return;
-    router.push(`/queue?scheduleId=${roundId}&title=${encodeURIComponent(title)}`);
-  };
+export default async function EventsPage() {
+  ///events api 호출
+  const res = await fetch(`${process.env.BACKEND_URL}/events`, { cache: "no-store" });
+  const performances: Performance[] = await res.json();
 
   return (
-    <>
-      <SiteNav active="events" />
-      <div className="pageWrap">
-        <div className="pageHeader">
-          <h1 className="pageTitle">공연 목록</h1>
-          <p className="pageSubtitle">예매하고 싶은 공연을 선택하세요.</p>
-        </div>
+    <div className="pageWrap">
+      <div className="pageHeader">
+        <h1 className="pageTitle">공연 목록</h1>
+        <p className="pageSubtitle">예매하고 싶은 공연을 선택하세요.</p>
+      </div>
 
-        <div className="eventGrid">
-          {MOCK_EVENTS.map((event) => (
-            <div key={event.id} className="eventCard">
-              <div className="eventPoster" style={{ background: event.color }}>
-                <span style={{ fontSize: 52 }}>{event.emoji}</span>
-              </div>
+      {performances.length === 0 && (
+        <p className="loadingMsg">등록된 공연이 없습니다.</p>
+      )}
 
-              <div className="eventInfo">
-                <p className="eventTitle">{event.title}</p>
-                <p className="eventLocation">📍 {event.location}</p>
+      <div className="eventGrid">
+        {performances.map((performance) => (
+          <div key={performance.performanceId} className="eventCard">
+            <div className="eventPoster">
+              {/* posterUrl 이 있으면 이미지, 없으면 기본 배경  */}
+              {performance.posterUrl
+                ? <img src={performance.posterUrl} alt={performance.pTitle} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : <div style={{ width: "100%", height: "100%", background: "var(--surface2)" }} />
+              }
+            </div>
 
-                <div className="eventRounds">
-                  {event.rounds.map((round) => (
-                    <div key={round.roundId} className="eventRoundRow">
-                      <span className="eventRoundTime">
-                        {round.roundTime.replace("T", " ")}
+            <div className="eventInfo">
+              <p className="eventTitle">{performance.pTitle}</p>
+              <p className="eventLocation">📍 {performance.pLocation}</p>
+
+              <div className="eventRounds">
+                {performance.rounds?.map((round) => (
+                  <div key={round.roundId} className="eventRoundRow">
+                    <span className="eventRoundTime">
+                      {round.roundTime.replace("T", " ")}
+                    </span>
+
+                    {round.roundStatus === "OPEN" ? (
+                      <BookButton
+                        roundId={round.roundId}
+                        roundTime={round.roundTime}
+                        openTime={round.openTime}
+                        title={performance.pTitle}
+                      />
+                    ) : (
+                      <span className={STATUS_CLASS[round.roundStatus]}>
+                        {STATUS_LABEL[round.roundStatus]}
                       </span>
-                      {round.roundStatus === "OPEN" ? (
-                        <button
-                          className="btnPrimary"
-                          style={{ padding: "4px 12px", fontSize: 12 }}
-                          onClick={() => handleBook(round.roundId, event.title, round.roundStatus)}
-                        >
-                          예매하기
-                        </button>
-                      ) : (
-                        <span className={STATUS_CLASS[round.roundStatus]}>
-                          {STATUS_LABEL[round.roundStatus]}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
-    </>
+    </div>
   );
 }
