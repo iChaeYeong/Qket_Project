@@ -1,6 +1,8 @@
 export type UserDTO = {
   userId: string;
   userNm: string;
+  userEmail?: string;
+
 };
 
 export type ApiResult = {
@@ -28,6 +30,7 @@ export type Performance = {
 };
 
 export type Seat = {
+  reservationId: number;
   seatId: number;
   roundId: number;
   seatRow: string;
@@ -37,10 +40,12 @@ export type Seat = {
 };
 
 export type Reservation = {
+  historyId: number;
   reservationId: number;
-  performanceTitle: string;
+  pTitle: string;
   roundTime: string;
-  seatInfo: string;
+  seatRow: string;
+  seatColume: string;
   grade: string;
   reservedStatus: string;
   createdReserved: string;

@@ -1,31 +1,60 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "@/lib/api/auth";
+import { login } from "@/lib/api/auth";   //auth api
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  //세션 저장
+  const { setUserSession } = useAuth();
+
+  // 입력값 상태
+  // 만약 회원가입 성공 시 userId 자동 입력
   const [userId, setUserId] = useState("");
+
+
+  useEffect(() => {
+    const prefill = sessionStorage.getItem("prefillUserId");
+    if (prefill) setUserId(prefill);
+  }, []);
+
   const [pwd, setPwd] = useState("");
+
+  // UI 상태
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+
+
+  // userID, pwd 빈값 체크 
+  // 빈값이 존재시 error 변수에 에러메세지 저장
   const handleLogin = async () => {
-    if (!userId || !pwd) { setError("아이디와 비밀번호를 입력하세요."); return; }
+    if (!userId || !pwd) {
+      setError("아이디와 비밀번호를 입력하세요.");
+      return;
+    }
+    //문제 없을시 로딩 true
     setLoading(true);
     setError("");
+
     try {
-      const res = await login(userId, pwd);
-      if (res.success) router.push("/");
-      else setError(res.message ?? "로그인에 실패했습니다.");
-    } catch {
-      setError("서버에 연결할 수 없습니다.");
+      const data = await login(userId, pwd); // await 를 사용해서 login 함수 끝날때까지 기다렸다가 다 끝나면 "/"로 리다이렉션
+      setUserSession(data.user ?? null); // data.user 가 undefined면 null 로 변환 아니면 값 저장
+      console.log(data)
+
+      router.push("/");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "로그인에 실패했습니다.");
     } finally {
       setLoading(false);
     }
-  };
+
+  }
+
+
 
   return (
     <div className="authWrap">
@@ -52,6 +81,8 @@ export default function LoginPage() {
             placeholder="비밀번호를 입력하세요"
             value={pwd}
             onChange={(e) => setPwd(e.target.value)}
+
+            //엔터 키 입력 시 handleLogin() 실행
             onKeyDown={(e) => e.key === "Enter" && handleLogin()}
           />
         </div>
@@ -60,7 +91,8 @@ export default function LoginPage() {
 
         <button
           className="btnPrimary btnPrimaryFull"
-          onClick={handleLogin}
+
+          onClick={handleLogin}          // 로그인 버튼 클릭 시 handleLogin() 실행
           disabled={loading}
         >
           {loading ? "로그인 중..." : "로그인"}
