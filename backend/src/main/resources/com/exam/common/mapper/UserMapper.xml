@@ -5,16 +5,19 @@
 <mapper namespace="com.exam.common.mapper.UserMapper">
 
     <select id="findById" resultType="UserDTO" parameterType="String">
-        select user_id  as userId,
-               user_nm  as userNm,
-               pwd
-        from user_info
-        where user_id = #{userId}
+        SELECT user_id     AS userId,
+               user_nm     AS userNm,
+               pwd,
+               user_email  AS userEmail,
+               user_status AS userStatus,
+               role_id     AS roleId
+        FROM USERS
+        WHERE user_id = #{userId}
     </select>
 
     <insert id="save" parameterType="UserDTO">
-        insert into user_info (user_id, user_nm, pwd)
-        values (#{userId}, #{userNm}, #{pwd})
+        INSERT INTO USERS (user_id, user_nm, pwd, user_email, role_id, user_status)
+        VALUES (#{userId}, #{userNm}, #{pwd}, #{userEmail}, 1, 'ACTIVE')
     </insert>
 
 </mapper>

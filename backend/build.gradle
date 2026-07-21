@@ -23,12 +23,14 @@ dependencies {
 	implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5")
 	runtimeOnly 'com.mysql:mysql-connector-j:8.3.0'
 
+	//redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.session:spring-session-data-redis'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+	//사용자 비밀번호 암호화
 	implementation 'org.springframework.security:spring-security-crypto'
 }
 
