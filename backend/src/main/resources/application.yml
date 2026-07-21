@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/qket?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3308}/${DB_NAME:qket}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 1234
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
 
   #schema.sql 과 data.sql 관리 가능 ( always|never )
   sql:
@@ -19,6 +19,10 @@ spring:
     store-type: redis
     timeout: 1800s
 
+server:
+  servlet:
+    context-path: /api
+    
 # TodoMapper.xml 과  DTO 별칭 설정
 mybatis:
   mapper-locations: com/exam/**/mapper/*.xml

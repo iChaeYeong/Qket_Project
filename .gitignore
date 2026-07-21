@@ -1,2 +1,7 @@
 .DS_Store
 CLAUDE.local.md
+
+# 실제 비밀번호가 들어가는 Secret 파일은 git에 올리지 않음 (k8s/db_secret_https_AWS.yaml.example 참고)
+k8s/db_secret_https_AWS.yaml
+k8s/.idea/
+k8s/kubectl
