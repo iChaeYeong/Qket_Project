@@ -1,6 +1,8 @@
 export type UserDTO = {
   userId: string;
   userNm: string;
+  userEmail?: string;
+
 };
 
 export type ApiResult = {
