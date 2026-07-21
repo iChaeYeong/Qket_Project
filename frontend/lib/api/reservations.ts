@@ -1,24 +1,22 @@
 import { apiFetch } from "./client";
 import type { Reservation, ApiResult } from "../data/types";
 
-export async function createReservation(
-  scheduleId: number,
-  seatId: number
-): Promise<ApiResult> {
-  const res = await apiFetch("/reservations", {
+// POST /api/reservations
+export async function createReservation(roundId: number, seatId: number): Promise<ApiResult> {
+  return apiFetch<ApiResult>("/reservations", {
     method: "POST",
-    body: JSON.stringify({ scheduleId, seatId }),
+    body: { roundId, seatId },
   });
-  return res.json();
 }
 
+// GET /api/reservations/my
+// 응답 형태: { reservations: [...] }
 export async function getMyReservations(): Promise<Reservation[]> {
-  const res = await apiFetch("/users/me/reservations");
-  if (!res.ok) throw new Error("예약 내역을 불러오지 못했습니다.");
-  return res.json();
+  const data = await apiFetch<{ reservations: Reservation[] }>("/reservations/my");
+  return data.reservations ?? [];
 }
 
+// DELETE /api/reservations/{reservationId}
 export async function cancelReservation(reservationId: number): Promise<ApiResult> {
-  const res = await apiFetch(`/reservations/${reservationId}`, { method: "DELETE" });
-  return res.json();
+  return apiFetch<ApiResult>(`/reservations/${reservationId}`, { method: "DELETE" });
 }
