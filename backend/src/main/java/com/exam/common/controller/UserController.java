@@ -42,13 +42,33 @@ public class UserController {
     @PostMapping("/register")
     public Map<String, Object> register(@RequestBody UserDTO userDTO) {
         Map<String, Object> result = new HashMap<>();
-        int n = userService.register(userDTO);
-        if (n > 0) {
-            result.put("success", true);
-            result.put("message", "회원가입이 완료되었습니다.");
-        } else {
+        try {
+            int n = userService.register(userDTO);
+            if (n > 0) {
+                result.put("success", true);
+                result.put("message", "회원가입이 완료되었습니다.");
+            } else {
+                result.put("success", false);
+                result.put("message", "회원가입에 실패했습니다.");
+            }
+        } catch (Exception e) {
             result.put("success", false);
-            result.put("message", "회원가입에 실패했습니다.");
+            //result.put("message", "이미 사용 중인 아이디 또는 이메일입니다.");
+            result.put("message", e.getMessage());
+        }
+        return result;
+    }
+
+    @GetMapping("/me")
+    public Map<String, Object> me(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        UserDTO user = (UserDTO) session.getAttribute("loginUser");
+        if (user == null) {
+            result.put("success", false);
+            result.put("message", "로그인이 필요합니다.");
+        } else {
+            result.put("success", true);
+            result.put("user", user);
         }
         return result;
     }
