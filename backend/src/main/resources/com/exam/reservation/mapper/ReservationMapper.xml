@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.exam.reservation.mapper.ReservationMapper">
+
+    <insert id="save" parameterType="ReservationDTO">
+        INSERT INTO RESERVATIONS (user_id, seat_id, round_id, reserved_status)
+        VALUES (#{userId}, #{seatId}, #{roundId}, 'reserved')
+    </insert>
+
+    <select id="findByUserId" resultType="ReservationDTO" parameterType="Long">
+        SELECT r.reservation_id  AS reservationId,
+               r.user_id         AS userId,
+               r.seat_id         AS seatId,
+               r.round_id        AS roundId,
+               r.reserved_status AS reservedStatus,
+               r.created_reserved AS createdReserved,
+               s.seat_row        AS seatRow,
+               s.seat_colume     AS seatColume,
+               s.grade,
+               p.p_title         AS pTitle,
+               pr.round_time     AS roundTime
+        FROM RESERVATIONS r
+                 JOIN SEATS s ON r.seat_id = s.seat_id
+                 JOIN PERFORMANCE_ROUND pr ON r.round_id = pr.round_id
+                 JOIN PERFORMANCES p ON pr.performance_id = p.performance_id
+        WHERE r.user_id = #{userId}
+          AND r.reserved_status = 'reserved'
+        ORDER BY r.created_reserved DESC
+    </select>
+
+    <select id="findById" resultType="ReservationDTO" parameterType="Long">
+        SELECT reservation_id  AS reservationId,
+               user_id         AS userId,
+               seat_id         AS seatId,
+               round_id        AS roundId,
+               reserved_status AS reservedStatus,
+               created_reserved AS createdReserved
+        FROM RESERVATIONS
+        WHERE reservation_id = #{reservationId}
+    </select>
+
+    <update id="cancel" parameterType="Long">
+        UPDATE RESERVATIONS
+        SET reserved_status = 'cancelled'
+        WHERE reservation_id = #{reservationId}
+    </update>
+
+</mapper>

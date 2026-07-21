@@ -17,15 +17,15 @@ INSERT INTO PERFORMANCES (p_title, p_location, poster_url) VALUES
   ('재즈 나잇 - Blue Note Seoul', '부산 벡스코 오디토리움', 'https://example.com/poster/jazznight.jpg');
 
 -- USERS password : test1234
-INSERT INTO USERS (user_nm, pwd, user_email, role_id, user_status) VALUES
-  ('관리자01', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'admin01@qket.com', 3, 'ACTIVE'),
-  ('매니저01', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'manager01@qket.com', 2, 'ACTIVE'),
-  ('테스트유저01', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser01@qket.com', 1, 'ACTIVE'),
-  ('테스트유저02', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser02@qket.com', 1, 'ACTIVE'),
-  ('테스트유저03', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser03@qket.com', 1, 'ACTIVE'),
-  ('테스트유저04', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser04@qket.com', 1, 'ACTIVE'),
-  ('테스트유저05', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser05@qket.com', 1, 'ACTIVE'),
-  ('테스트유저06', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser06@qket.com', 1, 'SUSPENDED');
+INSERT INTO USERS (user_id, user_nm, pwd, user_email, role_id, user_status) VALUES
+  ('admin01', '관리자01', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'admin01@qket.com', 3, 'ACTIVE'),
+  ('manager01', '매니저01', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'manager01@qket.com', 2, 'ACTIVE'),
+  ('testuser01', '테스트유저01', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser01@qket.com', 1, 'ACTIVE'),
+  ('testuser02', '테스트유저02', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser02@qket.com', 1, 'ACTIVE'),
+  ('testuser03', '테스트유저03', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser03@qket.com', 1, 'ACTIVE'),
+  ('testuser04', '테스트유저04', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser04@qket.com', 1, 'ACTIVE'),
+  ('testuser05', '테스트유저05', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser05@qket.com', 1, 'ACTIVE'),
+  ('testuser06', '테스트유저06', '$2b$10$hWBKmcDTCeEpTSo69AszSOq83qcpV.y7HJwWtweymXyxLmL7kD4Am', 'testuser06@qket.com', 1, 'SUSPENDED');
 
 -- PERFORMANCE_ROUND
 INSERT INTO PERFORMANCE_ROUND (performance_id, round_time, round_status) VALUES
@@ -221,12 +221,12 @@ INSERT INTO SEATS (round_id, seat_row, seat_colume, grade, status) VALUES
 
 -- RESERVATIONS (위에서 status='reserved'로 표시한 좌석과 매칭)
 INSERT INTO RESERVATIONS (user_id, seat_id, round_id, reserved_status) VALUES
-  (3, 1, 1, 'reserved'),
-  (4, 2, 1, 'reserved'),
-  (5, 61, 3, 'reserved'),
-  (6, 62, 3, 'reserved'),
-  (7, 121, 5, 'reserved'),
-  (3, 122, 5, 'reserved');
+  ('testuser01', 1, 1, 'reserved'),
+  ('testuser02', 2, 1, 'reserved'),
+  ('testuser03', 61, 3, 'reserved'),
+  ('testuser04', 62, 3, 'reserved'),
+  ('testuser05', 121, 5, 'reserved'),
+  ('testuser01', 122, 5, 'reserved');
 
 -- 검증용 조회f
 /*

@@ -1,21 +1,21 @@
 package com.exam.common.dto;
 
 import org.apache.ibatis.type.Alias;
+import java.io.Serializable;
 
 @Alias("UserDTO")
-public class UserDTO {
+public class UserDTO implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     String userId;
     String pwd;
     String userNm;
+    String userEmail;
+    String userStatus;
+    Long roleId;
 
     public UserDTO() {}
-
-    public UserDTO(String userId, String pwd, String userNm) {
-        this.userId = userId;
-        this.pwd = pwd;
-        this.userNm = userNm;
-    }
 
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
@@ -25,6 +25,15 @@ public class UserDTO {
 
     public String getUserNm() { return userNm; }
     public void setUserNm(String userNm) { this.userNm = userNm; }
+
+    public String getUserEmail() { return userEmail; }
+    public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
+
+    public String getUserStatus() { return userStatus; }
+    public void setUserStatus(String userStatus) { this.userStatus = userStatus; }
+
+    public Long getRoleId() { return roleId; }
+    public void setRoleId(Long roleId) { this.roleId = roleId; }
 
     @Override
     public String toString() {
