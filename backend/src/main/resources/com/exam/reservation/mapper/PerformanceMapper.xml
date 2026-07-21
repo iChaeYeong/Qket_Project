@@ -4,47 +4,33 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.exam.reservation.mapper.PerformanceMapper">
 
-    <select id="findAll" resultType="PerformanceDTO">
-        SELECT performance_id AS performanceId,
-               p_title        AS pTitle,
-               p_location     AS pLocation,
-               poster_url     AS posterUrl,
-               created_per    AS createdPer
-        FROM PERFORMANCES
-        ORDER BY created_per DESC
-    </select>
+    <resultMap id="performanceMap" type="PerformanceDTO">
+        <id property="performanceId" column="performance_id"/>
+        <result property="pTitle" column="p_title"/>
+        <result property="pLocation" column="venue_name"/>
+        <result property="posterUrl" column="poster_url"/>
+        <collection property="rounds" ofType="RoundDTO">
+            <id property="roundId" column="round_id"/>
+            <result property="roundTime" column="round_time"/>
+            <result property="openTime" column="open_time"/>
+            <result property="roundStatus" column="round_status"/>
+        </collection>
+    </resultMap>
 
-    <select id="findById" resultType="PerformanceDTO" parameterType="Long">
-        SELECT performance_id AS performanceId,
-               p_title        AS pTitle,
-               p_location     AS pLocation,
-               poster_url     AS posterUrl,
-               created_per    AS createdPer
-        FROM PERFORMANCES
-        WHERE performance_id = #{performanceId}
-    </select>
-
-    <select id="findRoundsByPerformanceId" resultType="PerformanceRoundDTO" parameterType="Long">
-        SELECT pr.round_id       AS roundId,
-               pr.performance_id AS performanceId,
-               p.p_title         AS pTitle,
-               pr.round_time     AS roundTime,
-               pr.round_status   AS roundStatus
-        FROM PERFORMANCE_ROUND pr
-                 JOIN PERFORMANCES p ON pr.performance_id = p.performance_id
-        WHERE pr.performance_id = #{performanceId}
-        ORDER BY pr.round_time
-    </select>
-
-    <select id="findRoundById" resultType="PerformanceRoundDTO" parameterType="Long">
-        SELECT pr.round_id       AS roundId,
-               pr.performance_id AS performanceId,
-               p.p_title         AS pTitle,
-               pr.round_time     AS roundTime,
-               pr.round_status   AS roundStatus
-        FROM PERFORMANCE_ROUND pr
-                 JOIN PERFORMANCES p ON pr.performance_id = p.performance_id
-        WHERE pr.round_id = #{roundId}
+    <select id="findAll" resultMap="performanceMap">
+        SELECT  A.performance_id,
+                A.p_title,
+                V.venue_name,
+                A.poster_url,
+                A.created_per,
+                B.round_id,
+                B.round_time,
+                B.open_time,
+                B.round_status
+        FROM PERFORMANCES A
+        LEFT OUTER JOIN VENUE V ON A.venue_id = V.venue_id
+        LEFT OUTER JOIN PERFORMANCE_ROUND B ON A.performance_id = B.performance_id
+        ORDER BY A.created_per DESC
     </select>
 
 </mapper>
