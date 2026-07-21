@@ -1,58 +1,61 @@
+// Client Component — "use client" 필요한 이유:
+//   1. 예매 취소 버튼 onClick 이벤트 핸들러 (handleCancel)
+//   2. 로그인 세션 기반 사용자 정보 조회 (credentials: "include" 쿠키)
+//   * 이상적으로는 유저 정보 + 예매 목록 fetch 를 Server Component 에서 처리하고
+//     취소 버튼만 Client Component 로 분리하는 것이 좋지만,
+//     세션 쿠키 forwarding 설정이 필요해 지금은 전체를 Client Component 로 유지
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import SiteNav from "@/components/SiteNav";
-import { getMyReservations, cancelReservation } from "@/lib/api/reservations";
-import type { Reservation, UserDTO } from "@/lib/data/types";
+import { useAuth } from "@/context/AuthContext";
+import type { Reservation } from "@/lib/data/types";
+import { getMyReservations, cancelReservation } from "@/lib/api/reservations"
 
+// 예매 상태 표시 라벨
 const STATUS_LABEL: Record<string, string> = {
-  CONFIRMED: "예매 완료",
+  RESERVED: "예매 완료",
   CANCELLED: "취소됨",
-  PENDING: "처리 중",
+};
+// 예매 상태 배지 CSS 클래스
+const STATUS_CLASS: Record<string, string> = {
+  RESERVED: "badge badgeOpen",
+  CANCELLED: "badge badgeClosed",
 };
 
-const STATUS_CLASS: Record<string, string> = {
-  CONFIRMED: "badge badgeOpen",
-  CANCELLED: "badge badgeClosed",
-  PENDING:   "badge badgeSoldout",
-};
 
 export default function MyPage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserDTO | null>(null);
+
+  const { userSession } = useAuth();
+
+  // 예매 내역 목록
   const [reservations, setReservations] = useState<Reservation[]>([]);
+
+  // UI 상태
   const [loading, setLoading] = useState(true);
-  const [cancelling, setCancelling] = useState<number | null>(null);
+  const [cancelling, setCancelling] = useState<number | null>(null); // 취소 중인 reservationId
 
   useEffect(() => {
-    // 세션에서 유저 정보 조회 (/api/users/me)
-    fetch("/api/users/me", { credentials: "include" })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => data && setUser(data))
-      .catch(() => {});
-
     getMyReservations()
       .then(setReservations)
-      .catch(() => {
-        // 백엔드 미연결 시 빈 목록 표시
-        setReservations([]);
-      })
+      .catch(() => setReservations([]))  //에러시
       .finally(() => setLoading(false));
   }, []);
 
+  //예매버튼 클릭시 실행 이벤트
   const handleCancel = async (reservationId: number) => {
     if (!confirm("예매를 취소하시겠습니까?")) return;
+
     setCancelling(reservationId);
     try {
-      const res = await cancelReservation(reservationId);
-      if (res.success) {
-        setReservations(prev =>
-          prev.map(r =>
-            r.reservationId === reservationId ? { ...r, reservedStatus: "CANCELLED" } : r
-          )
-        );
-      }
+      await cancelReservation(reservationId);
+      setReservations(prev =>
+        prev.map(r => r.reservationId === reservationId
+          ? { ...r, reservedStatus: "CANCELLED" }
+          : r
+        )
+      );
     } finally {
       setCancelling(null);
     }
@@ -60,7 +63,6 @@ export default function MyPage() {
 
   return (
     <>
-      <SiteNav active="mypage" />
       <div className="pageWrap">
         <div className="pageHeader">
           <h1 className="pageTitle">마이페이지</h1>
@@ -71,10 +73,11 @@ export default function MyPage() {
           {/* 프로필 카드 */}
           <div className="profileCard">
             <div className="profileAvatar">
-              {user?.userNm?.[0] ?? "?"}
+              {/* [TODO-MYPAGE-AVATAR] user.userNm 첫 글자 표시, 없으면 "?" */}
+              {userSession?.userNm?.[0] ?? "?"}
             </div>
-            <p className="profileName">{user?.userNm ?? "—"}</p>
-            <p className="profileId">@{user?.userId ?? "—"}</p>
+            <p className="profileName">{userSession?.userNm ?? "—"}</p>
+            <p className="profileId">@{userSession?.userId ?? "—"}</p>
 
             <hr className="divider" />
 
@@ -86,7 +89,7 @@ export default function MyPage() {
               <div style={{ fontSize: 13, color: "var(--text-2)", display: "flex", justifyContent: "space-between" }}>
                 <span>완료된 예매</span>
                 <span style={{ color: "var(--success)", fontWeight: 700 }}>
-                  {reservations.filter(r => r.reservedStatus === "CONFIRMED").length}건
+                  {reservations.filter(r => r.reservedStatus === "RESERVED").length}건
                 </span>
               </div>
             </div>
@@ -116,12 +119,12 @@ export default function MyPage() {
 
             <div className="reservationList">
               {reservations.map(r => (
-                <div key={r.reservationId} className="reservationCard">
+                <div key={r.historyId} className="reservationCard">
                   <div className="reservationInfo">
-                    <p className="reservationTitle">{r.performanceTitle}</p>
+                    <p className="reservationTitle">{r.pTitle}</p>
                     <div className="reservationMeta">
-                      <span>📅 {r.roundTime}</span>
-                      <span>💺 {r.seatInfo}</span>
+                      <span>📅 {new Date(r.roundTime).toLocaleString("ko-KR", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                      <span>💺 {r.seatRow}행 {r.seatColume}번</span>
                       <span>🎟 {r.grade}</span>
                     </div>
                     <div style={{ marginTop: 8 }}>
@@ -131,7 +134,7 @@ export default function MyPage() {
                     </div>
                   </div>
 
-                  {r.reservedStatus === "CONFIRMED" && (
+                  {r.reservedStatus === "RESERVED" && (
                     <button
                       className="btnDanger"
                       onClick={() => handleCancel(r.reservationId)}

@@ -1,88 +1,99 @@
+// Client Component — "use client" 필요한 이유:
+//   1. 좌석 선택 상태 관리 (useState: selected, seats)
+//   2. 예매하기 버튼 onClick 이벤트 핸들러 (handleReserve)
+//   3. 좌석 클릭 이벤트 핸들러 (handleSelect)
+//   * 이상적으로는 좌석 목록 fetch 는 Server Component 에서 처리하고
+//     선택/예매 인터랙션만 Client Component 로 분리하는 것이 좋음
+//     (Server Component → props 로 seats 전달 → Client Component 에서 selection 처리)
 "use client";
 
-import { use, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import SiteNav from "@/components/SiteNav";
-import { getSeats } from "@/lib/api/seats";
-import { createReservation } from "@/lib/api/reservations";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import type { Seat } from "@/lib/data/types";
+import { getSeats } from "@/lib/api/seats"
+import { createReservation } from "@/lib/api/reservations"
 
-type Grade = "VIP" | "R" | "S";
 
-const GRADE_LABEL: Record<Grade, string> = { VIP: "VIP석", R: "R석", S: "S석" };
-const GRADE_PRICE: Record<Grade, string> = { VIP: "220,000원", R: "154,000원", S: "99,000원" };
+// 등급 표시 라벨
+const GRADE_LABEL: Record<string, string> = { VIP: "VIP석", R: "R석", S: "S석" };
 
+// 등급별 가격 (백엔드에서 받아올 수도 있음)
+const GRADE_PRICE: Record<string, string> = { VIP: "220,000원", R: "154,000원", S: "99,000원" };
+
+// 좌석 행/열 구성 (백엔드 DB와 맞춰야 함)
 const ROWS = ["A", "B", "C", "D", "E", "F", "G", "H"];
-const COLS = Array.from({ length: 12 }, (_, i) => i + 1);
 
-function getGrade(row: string): Grade {
-  if (["A", "B"].includes(row)) return "VIP";
-  if (["C", "D", "E"].includes(row)) return "R";
-  return "S";
-}
-
-function generateMockSeats(scheduleId: number): Seat[] {
-  const seats: Seat[] = [];
-  let id = 1;
-  for (const row of ROWS) {
-    for (const col of COLS) {
-      const rand = Math.random();
-      const status: Seat["status"] =
-        rand < 0.55 ? "AVAILABLE" : rand < 0.75 ? "RESERVED" : rand < 0.82 ? "LOCKED" : "AVAILABLE";
-      seats.push({
-        seatId: id++,
-        roundId: scheduleId,
-        seatRow: row,
-        seatColumn: String(col),
-        grade: getGrade(row),
-        status,
-      });
-    }
-  }
-  return seats;
-}
-
-export default function SeatsPage({ params }: { params: Promise<{ scheduleId: string }> }) {
-  const { scheduleId } = use(params);
+export default function SeatsPage() {
+  //동적라우팅 값 가져오기
+  const { scheduleId } = useParams<{ scheduleId: string }>();
   const router = useRouter();
+
+  // 좌석 목록
   const [seats, setSeats] = useState<Seat[]>([]);
+
+  // 선택된 좌석 (단일 선택)
   const [selected, setSelected] = useState<Seat | null>(null);
+
+  // UI 상태
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  // 컴포넌트 마운트 시 좌석 목록 불러오기
+  // lib/api/seats.ts 의 getSeats(scheduleId) 호출 → GET /api/seats/round/{scheduleId}
+  // 응답 배열을 setSeats 에 넣기
+  // 실패 시 setSeats([]) 또는 에러 표시
   useEffect(() => {
     getSeats(Number(scheduleId))
       .then(setSeats)
-      .catch(() => setSeats(generateMockSeats(Number(scheduleId))))
+      .catch(() => setSeats([]))
       .finally(() => setLoading(false));
   }, [scheduleId]);
 
+
+  // [TODO-SEATS-SELECT] 좌석 클릭 시 실행
+  // status === "AVAILABLE" 인 좌석만 선택 가능
+  // 이미 선택된 좌석 다시 클릭 시 선택 해제
+
   const handleSelect = (seat: Seat) => {
-    if (seat.status !== "AVAILABLE") return;
+    if (seat.status !== "AVAILABLE") {
+      alert("이미 선택된 좌석입니다.")
+      return;
+    }
     setSelected(prev => prev?.seatId === seat.seatId ? null : seat);
   };
 
+
+  // [TODO-SEATS-RESERVE] 예매하기 버튼 클릭 시 실행
+  // 1. selected 없으면 리턴
+  // 2. setBooking(true)
+  // 3. lib/api/reservations.ts 의 createReservation(scheduleId, selected.seatId) 호출
+  //    → POST /api/reservations { roundId: scheduleId, seatId }
+  // 4. 성공 시 setSuccess(true) → 2초 뒤 router.push("/mypage")
+  // 5. 실패 시 setError(응답.message)
+  // 6. catch 블록에서 setError("서버에 연결할 수 없습니다.")
+  // 7. finally 에서 setBooking(false)
   const handleReserve = async () => {
-    if (!selected) return;
+    if (!selected) return; //아무것도 선택하지 않고 예매 시
+
     setBooking(true);
-    setError("");
     try {
-      const res = await createReservation(Number(scheduleId), selected.seatId);
-      if (res.success) {
-        setSuccess(true);
-        setTimeout(() => router.push("/mypage"), 2000);
-      } else {
-        setError(res.message ?? "예매에 실패했습니다.");
-      }
-    } catch {
-      setError("서버에 연결할 수 없습니다.");
+      await createReservation(selected.reservationId, Number(scheduleId), selected.seatId);
+      setSuccess(true);
+      setTimeout(() => router.push("/mypage"), 2000); //예매 성공 시 2초뒤 마이페이지로(예매조회)
+    } catch (e: any) {
+      setError(e?.message ?? "서버에 연결할 수 없습니다.");
     } finally {
       setBooking(false);
     }
+
+
   };
 
+  // 좌석 버튼 CSS 클래스 결정
+  // selected → seatSelected / RESERVED → seatReserved / LOCKED → seatLocked
+  // 등급별 색상: VIP → seatAvailableVip / R → seatAvailableR / S → seatAvailableS
   const seatClass = (seat: Seat): string => {
     const base = "seat";
     if (selected?.seatId === seat.seatId) {
@@ -90,20 +101,23 @@ export default function SeatsPage({ params }: { params: Promise<{ scheduleId: st
       return `${base} ${gradeClass} seatSelected`;
     }
     if (seat.status === "RESERVED") return `${base} seatReserved`;
-    if (seat.status === "LOCKED")   return `${base} seatLocked`;
+    if (seat.status === "LOCKED") return `${base} seatLocked`;
     if (seat.grade === "VIP") return `${base} seatAvailableVip`;
-    if (seat.grade === "R")   return `${base} seatAvailableR`;
+    if (seat.grade === "R") return `${base} seatAvailableR`;
     return `${base} seatAvailableS`;
   };
 
+  // 행별로 좌석 그룹핑
   const byRow = ROWS.map(row => ({
     row,
     seats: seats.filter(s => s.seatRow === row).sort((a, b) => Number(a.seatColumn) - Number(b.seatColumn)),
   }));
 
+  // 컬럼 번호 헤더용 (첫 번째 행 기준)
+  const colCount = byRow.find(r => r.seats.length > 0)?.seats.length ?? 0;
+
   return (
     <>
-      <SiteNav />
       <div className="pageWrap">
         <div className="pageHeader">
           <h1 className="pageTitle">좌석 선택</h1>
@@ -118,6 +132,7 @@ export default function SeatsPage({ params }: { params: Promise<{ scheduleId: st
             <div className="seatMapWrap">
               <div className="seatStage">STAGE</div>
 
+              {/* 범례 */}
               <div className="seatLegend">
                 <div className="seatLegendItem">
                   <div className="seatLegendDot" style={{ background: "var(--vip-color)" }} />
@@ -141,7 +156,19 @@ export default function SeatsPage({ params }: { params: Promise<{ scheduleId: st
                 </div>
               </div>
 
+              {/* 좌석 그리드 */}
               <div className="seatGrid">
+                {/* 컬럼 번호 헤더 */}
+                {colCount > 0 && (
+                  <div className="seatRow">
+                    <span className="seatRowLabel" />
+                    {Array.from({ length: colCount }, (_, i) => (
+                      <span key={i} style={{ width: 28, textAlign: "center", fontSize: 10, color: "var(--text-3)", flexShrink: 0 }}>
+                        {i + 1}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {byRow.map(({ row, seats: rowSeats }) => (
                   <div key={row} className="seatRow">
                     <span className="seatRowLabel">{row}</span>
