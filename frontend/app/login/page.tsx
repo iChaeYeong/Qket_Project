@@ -18,7 +18,7 @@ export default function LoginPage() {
     setError("");
     try {
       const res = await login(userId, pwd);
-      if (res.success) router.push("/accounts");
+      if (res.success) router.push("/");
       else setError(res.message ?? "로그인에 실패했습니다.");
     } catch {
       setError("서버에 연결할 수 없습니다.");
@@ -30,9 +30,9 @@ export default function LoginPage() {
   return (
     <div className="authWrap">
       <div className="authBox">
-        <p className="authLogo">Banking</p>
+        <p className="authLogo">TicketBox</p>
         <h1 className="authTitle">로그인</h1>
-        <p className="authDesc">계좌이체 시스템에 접속합니다.</p>
+        <p className="authDesc">공연을 예매하려면 로그인이 필요합니다.</p>
 
         <div className="field">
           <label className="fieldLabel">아이디</label>
@@ -67,7 +67,7 @@ export default function LoginPage() {
         </button>
 
         <p className="authHelper">
-          계정이 없나요? <Link href="/signup">회원가입</Link>
+          계정이 없으신가요? <Link href="/signup">회원가입</Link>
         </p>
       </div>
     </div>

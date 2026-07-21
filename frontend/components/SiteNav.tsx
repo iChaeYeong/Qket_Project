@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { logout } from "@/lib/api/auth";
 
 type Props = {
-  active?: "accounts" | "transfer" | "transactions";
+  active?: "events" | "mypage";
 };
 
 export default function SiteNav({ active }: Props) {
@@ -19,25 +19,19 @@ export default function SiteNav({ active }: Props) {
   return (
     <nav className="siteNav">
       <div className="siteNavInner">
-        <Link href="/accounts" className="siteNavBrand">Bank</Link>
+        <Link href="/" className="siteNavBrand">TicketBox</Link>
         <div className="siteNavLinks">
           <Link
-            href="/accounts"
-            className={active === "accounts" ? "siteNavLink siteNavLinkActive" : "siteNavLink"}
+            href="/"
+            className={active === "events" ? "siteNavLink siteNavLinkActive" : "siteNavLink"}
           >
-            계좌
+            공연
           </Link>
           <Link
-            href="/transfer"
-            className={active === "transfer" ? "siteNavLink siteNavLinkActive" : "siteNavLink"}
+            href="/mypage"
+            className={active === "mypage" ? "siteNavLink siteNavLinkActive" : "siteNavLink"}
           >
-            이체
-          </Link>
-          <Link
-            href="/transactions"
-            className={active === "transactions" ? "siteNavLink siteNavLinkActive" : "siteNavLink"}
-          >
-            거래내역
+            마이페이지
           </Link>
           <button className="siteNavLink siteNavLogout" onClick={handleLogout}>
             로그아웃
