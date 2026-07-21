@@ -20,7 +20,7 @@ export async function register(
   userEmail: string,
   pwd: string
 ): Promise<ApiResult> {
-  const res = await apiFetch("/auth/register", {
+  const res = await apiFetch("/auth/signup", {
     method: "POST",
     body: JSON.stringify({ userId, userNm, userEmail, pwd }),
   });
