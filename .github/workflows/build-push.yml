@@ -1,0 +1,98 @@
+name: Build and Push to ECR
+
+on:
+  push:
+    branches:
+      - dev
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: team5/ecr/REMOVED
+  EKS_CLUSTER_NAME: team5-kube-practice
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
+  build-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push backend image
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          TAG: backend-${{ github.sha }}
+        run: |
+          docker build -t $REGISTRY/$ECR_REPOSITORY:$TAG ./backend
+          docker push $REGISTRY/$ECR_REPOSITORY:$TAG
+          echo "Pushed image: $REGISTRY/$ECR_REPOSITORY:$TAG"
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+      - name: Deploy to EKS
+        run: |
+          kubectl set image deployment/account-backend account-backend=${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:backend-${{ github.sha }} -n default
+          kubectl rollout status deployment/account-backend -n default
+
+  build-frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push frontend image
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          TAG: frontend-${{ github.sha }}
+        run: |
+          docker build -t $REGISTRY/$ECR_REPOSITORY:$TAG ./frontend
+          docker push $REGISTRY/$ECR_REPOSITORY:$TAG
+          echo "Pushed image: $REGISTRY/$ECR_REPOSITORY:$TAG"
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+      - name: Deploy to EKS
+        run: |
+          kubectl set image deployment/REMOVED-frontend REMOVED-frontend=${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:frontend-${{ github.sha }} -n default
+          kubectl rollout status deployment/REMOVED-frontend -n default
