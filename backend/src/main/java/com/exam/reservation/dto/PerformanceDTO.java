@@ -1,30 +1,23 @@
 package com.exam.reservation.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 import org.apache.ibatis.type.Alias;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+@Data
 @Alias("PerformanceDTO")
 public class PerformanceDTO {
 
-    Long performanceId;
-    String pTitle;
-    String pLocation;
-    String posterUrl;
-    LocalDateTime createdPer;
-
-    public Long getPerformanceId() { return performanceId; }
-    public void setPerformanceId(Long performanceId) { this.performanceId = performanceId; }
-
-    public String getPTitle() { return pTitle; }
-    public void setPTitle(String pTitle) { this.pTitle = pTitle; }
-
-    public String getPLocation() { return pLocation; }
-    public void setPLocation(String pLocation) { this.pLocation = pLocation; }
-
-    public String getPosterUrl() { return posterUrl; }
-    public void setPosterUrl(String posterUrl) { this.posterUrl = posterUrl; }
-
-    public LocalDateTime getCreatedPer() { return createdPer; }
-    public void setCreatedPer(LocalDateTime createdPer) { this.createdPer = createdPer; }
+    private Long performanceId;
+    //소문자 한글자로 인해서 camel-case 가 안먹음
+    @JsonProperty("pTitle")
+    private String pTitle;
+    @JsonProperty("pLocation")
+    private String pLocation;
+    private String posterUrl;
+    private LocalDateTime createdPer;
+    private List<RoundDTO> rounds;
 }
