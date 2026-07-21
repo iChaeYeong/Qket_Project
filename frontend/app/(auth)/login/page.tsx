@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/api/auth";   //auth api
 import { useAuth } from "@/context/AuthContext";
@@ -13,7 +13,14 @@ export default function LoginPage() {
 
   // 입력값 상태
   // 만약 회원가입 성공 시 userId 자동 입력
-  const [userId, setUserId] = useState(() => sessionStorage.getItem("prefillUserId") ?? "")
+  const [userId, setUserId] = useState("");
+
+
+  useEffect(() => {
+    const prefill = sessionStorage.getItem("prefillUserId");
+    if (prefill) setUserId(prefill);
+  }, []);
+
   const [pwd, setPwd] = useState("");
 
   // UI 상태
