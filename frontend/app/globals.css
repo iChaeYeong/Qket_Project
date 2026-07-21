@@ -104,8 +104,23 @@ a {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.siteNavUser {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  padding: 6px 12px;
+}
+
+.siteNavLogin {
+  color: var(--text-2);
+}
+
+.siteNavLogin:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
 .siteNavLogout {
-  margin-left: 8px;
   color: var(--text-2);
 }
 
