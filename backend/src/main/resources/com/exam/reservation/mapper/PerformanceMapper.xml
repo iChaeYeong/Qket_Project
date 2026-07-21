@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.exam.reservation.mapper.PerformanceMapper">
+
+    <select id="findAll" resultType="PerformanceDTO">
+        SELECT performance_id AS performanceId,
+               p_title        AS pTitle,
+               p_location     AS pLocation,
+               poster_url     AS posterUrl,
+               created_per    AS createdPer
+        FROM PERFORMANCES
+        ORDER BY created_per DESC
+    </select>
+
+    <select id="findById" resultType="PerformanceDTO" parameterType="Long">
+        SELECT performance_id AS performanceId,
+               p_title        AS pTitle,
+               p_location     AS pLocation,
+               poster_url     AS posterUrl,
+               created_per    AS createdPer
+        FROM PERFORMANCES
+        WHERE performance_id = #{performanceId}
+    </select>
+
+    <select id="findRoundsByPerformanceId" resultType="PerformanceRoundDTO" parameterType="Long">
+        SELECT pr.round_id       AS roundId,
+               pr.performance_id AS performanceId,
+               p.p_title         AS pTitle,
+               pr.round_time     AS roundTime,
+               pr.round_status   AS roundStatus
+        FROM PERFORMANCE_ROUND pr
+                 JOIN PERFORMANCES p ON pr.performance_id = p.performance_id
+        WHERE pr.performance_id = #{performanceId}
+        ORDER BY pr.round_time
+    </select>
+
+    <select id="findRoundById" resultType="PerformanceRoundDTO" parameterType="Long">
+        SELECT pr.round_id       AS roundId,
+               pr.performance_id AS performanceId,
+               p.p_title         AS pTitle,
+               pr.round_time     AS roundTime,
+               pr.round_status   AS roundStatus
+        FROM PERFORMANCE_ROUND pr
+                 JOIN PERFORMANCES p ON pr.performance_id = p.performance_id
+        WHERE pr.round_id = #{roundId}
+    </select>
+
+</mapper>
