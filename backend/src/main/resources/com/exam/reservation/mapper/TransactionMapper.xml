@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.exam.reservation.mapper.TransactionMapper">
+
+    <select id="findByAccountNo" resultType="TransactionDTO" parameterType="String">
+        select tran_id         as tranId,
+               frm_account_no as frmAccountNo,
+               to_account_no  as toAccountNo,
+               tran_amt       as tranAmt,
+               date_format(tran_dt, '%Y-%m-%d %H:%i:%s') as tranDt
+        from transaction_history
+        where frm_account_no = #{accountNo}
+           or to_account_no  = #{accountNo}
+        order by tran_dt desc
+    </select>
+
+    <insert id="save" parameterType="TransactionDTO">
+        insert into transaction_history (frm_account_no, to_account_no, tran_amt)
+        values (#{frmAccountNo}, #{toAccountNo}, #{tranAmt})
+    </insert>
+
+</mapper>
