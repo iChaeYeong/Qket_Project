@@ -7,7 +7,7 @@ services:
       MYSQL_DATABASE: REMOVED
       MYSQL_CHARSET: utf8mb4
     ports:
-      - "REMOVED:REMOVED"
+      - "3308:REMOVED"
     volumes:
       - mysql-data:/var/lib/mysql
       - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
