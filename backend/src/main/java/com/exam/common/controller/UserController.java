@@ -21,6 +21,7 @@ public class UserController {
      *  URL      :  "/auth/logout"
      *  이름      :   로그아웃
      *  기능      :   로그아웃 시킨다
+     *  method   :   POST
      *  param    :   UserDTO, HttpSession
      *  result   :   Map<String, Object>
      ************************************/
@@ -58,6 +59,7 @@ public class UserController {
      *  URL      :  "/auth/signup"
      *  이름      :   회원가입
      *  기능      :   회원가입 시킨다
+     *  method   :   POST
      *  param    :   UserDTO
      *  result   :   Map<String, Object> 완료 메세지
      ************************************/
@@ -85,6 +87,7 @@ public class UserController {
      *  URL      :  "/auth/me"
      *  이름      :   세션(redis) 확인
      *  기능      :   redis의 캐시를 통해 사용자가 로그인 상태인지 확인한다
+     *  method   :   GET
      *  param    :   HttpSession
      *  result   :   Map<String, Object> 완료 메세지
      ************************************/

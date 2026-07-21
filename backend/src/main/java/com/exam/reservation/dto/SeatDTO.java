@@ -7,6 +7,7 @@ import org.apache.ibatis.type.Alias;
 @Alias("SeatDTO")
 public class SeatDTO {
 
+    private Long reservationId;
     private Long seatId;
     private Long roundId;
     private String seatRow;

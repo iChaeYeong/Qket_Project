@@ -8,27 +8,26 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Reservation, UserDTO } from "@/lib/data/types";
+import { useAuth } from "@/context/AuthContext";
+import type { Reservation } from "@/lib/data/types";
+import { getMyReservations, cancelReservation } from "@/lib/api/reservations"
 
 // 예매 상태 표시 라벨
 const STATUS_LABEL: Record<string, string> = {
-  CONFIRMED: "예매 완료",
+  RESERVED: "예매 완료",
   CANCELLED: "취소됨",
-  PENDING: "처리 중",
 };
-
 // 예매 상태 배지 CSS 클래스
 const STATUS_CLASS: Record<string, string> = {
-  CONFIRMED: "badge badgeOpen",
+  RESERVED: "badge badgeOpen",
   CANCELLED: "badge badgeClosed",
-  PENDING:   "badge badgeSoldout",
 };
+
 
 export default function MyPage() {
   const router = useRouter();
 
-  // 로그인 유저 정보
-  const [user, setUser] = useState<UserDTO | null>(null);
+  const { userSession } = useAuth();
 
   // 예매 내역 목록
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -37,26 +36,29 @@ export default function MyPage() {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState<number | null>(null); // 취소 중인 reservationId
 
-  // [TODO-MYPAGE-INIT] 컴포넌트 마운트 시 실행
-  // 1. GET /api/auth/me → 로그인 유저 정보 가져오기 → setUser
-  //    응답 형식: { success: true, user: { userId, userNm } }
-  // 2. lib/api/reservations.ts 의 getMyReservations() 호출 → GET /api/reservations/my
-  //    응답을 setReservations 에 넣기
-  //    실패 시 setReservations([]) 로 빈 목록 표시
-  // 3. setLoading(false)
   useEffect(() => {
-    // 구현 필요
-    setLoading(false);
+    getMyReservations()
+      .then(setReservations)
+      .catch(() => setReservations([]))  //에러시
+      .finally(() => setLoading(false));
   }, []);
 
-  // [TODO-MYPAGE-CANCEL] 예매 취소 버튼 클릭 시 실행
-  // 1. confirm("예매를 취소하시겠습니까?") → 취소 시 리턴
-  // 2. setCancelling(reservationId)
-  // 3. lib/api/reservations.ts 의 cancelReservation(reservationId) 호출 → DELETE /api/reservations/{id}
-  // 4. 성공 시 해당 예매의 reservedStatus 를 "CANCELLED" 로 변경 (setReservations 업데이트)
-  // 5. finally 에서 setCancelling(null)
+  //예매버튼 클릭시 실행 이벤트
   const handleCancel = async (reservationId: number) => {
-    // 구현 필요
+    if (!confirm("예매를 취소하시겠습니까?")) return;
+
+    setCancelling(reservationId);
+    try {
+      await cancelReservation(reservationId);
+      setReservations(prev =>
+        prev.map(r => r.reservationId === reservationId
+          ? { ...r, reservedStatus: "CANCELLED" }
+          : r
+        )
+      );
+    } finally {
+      setCancelling(null);
+    }
   };
 
   return (
@@ -72,10 +74,10 @@ export default function MyPage() {
           <div className="profileCard">
             <div className="profileAvatar">
               {/* [TODO-MYPAGE-AVATAR] user.userNm 첫 글자 표시, 없으면 "?" */}
-              {user?.userNm?.[0] ?? "?"}
+              {userSession?.userNm?.[0] ?? "?"}
             </div>
-            <p className="profileName">{user?.userNm ?? "—"}</p>
-            <p className="profileId">@{user?.userId ?? "—"}</p>
+            <p className="profileName">{userSession?.userNm ?? "—"}</p>
+            <p className="profileId">@{userSession?.userId ?? "—"}</p>
 
             <hr className="divider" />
 
@@ -87,7 +89,7 @@ export default function MyPage() {
               <div style={{ fontSize: 13, color: "var(--text-2)", display: "flex", justifyContent: "space-between" }}>
                 <span>완료된 예매</span>
                 <span style={{ color: "var(--success)", fontWeight: 700 }}>
-                  {reservations.filter(r => r.reservedStatus === "CONFIRMED").length}건
+                  {reservations.filter(r => r.reservedStatus === "RESERVED").length}건
                 </span>
               </div>
             </div>
@@ -117,12 +119,12 @@ export default function MyPage() {
 
             <div className="reservationList">
               {reservations.map(r => (
-                <div key={r.reservationId} className="reservationCard">
+                <div key={r.historyId} className="reservationCard">
                   <div className="reservationInfo">
-                    <p className="reservationTitle">{r.performanceTitle}</p>
+                    <p className="reservationTitle">{r.pTitle}</p>
                     <div className="reservationMeta">
-                      <span>📅 {r.roundTime}</span>
-                      <span>💺 {r.seatInfo}</span>
+                      <span>📅 {new Date(r.roundTime).toLocaleString("ko-KR", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                      <span>💺 {r.seatRow}행 {r.seatColume}번</span>
                       <span>🎟 {r.grade}</span>
                     </div>
                     <div style={{ marginTop: 8 }}>
@@ -132,7 +134,7 @@ export default function MyPage() {
                     </div>
                   </div>
 
-                  {r.reservedStatus === "CONFIRMED" && (
+                  {r.reservedStatus === "RESERVED" && (
                     <button
                       className="btnDanger"
                       onClick={() => handleCancel(r.reservationId)}
