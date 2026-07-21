@@ -14,10 +14,15 @@ export async function logout(): Promise<ApiResult> {
   return res.json();
 }
 
-export async function register(userId: string, pwd: string, userNm: string): Promise<ApiResult> {
+export async function register(
+  userId: string,
+  pwd: string,
+  userNm: string,
+  email: string
+): Promise<ApiResult> {
   const res = await apiFetch("/auth/register", {
     method: "POST",
-    body: JSON.stringify({ userId, pwd, userNm }),
+    body: JSON.stringify({ userId, pwd, userNm, email }),
   });
   return res.json();
 }

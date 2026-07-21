@@ -1,9 +1,9 @@
-﻿import "./globals.css";
+import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Bank Transfer System",
-  description: "계좌이체 시스템 프론트엔드"
+  title: "TicketBox",
+  description: "공연·행사 온라인 예매 서비스",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
