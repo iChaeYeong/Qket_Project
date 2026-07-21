@@ -1,24 +1,66 @@
-CREATE TABLE user_info (
-    user_id VARCHAR(20) PRIMARY KEY,
-    user_nm VARCHAR(20) NOT NULL,
-    pwd VARCHAR(255) NOT NULL
+USE REMOVED;
+
+CREATE TABLE IF NOT EXISTS ROLES (
+    role_id BIGINT NOT NULL AUTO_INCREMENT,
+    role_name VARCHAR(255),
+
+    PRIMARY KEY (role_id),
+    UNIQUE KEY uk_role_name (role_name)
 );
 
-CREATE TABLE accounts_info (
-    account_no VARCHAR(30) PRIMARY KEY,
-    user_id VARCHAR(20) NOT NULL,
-    balance INT DEFAULT 0,
-    account_nm VARCHAR(30) NOT NULL,
-    account_stat VARCHAR(20) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user_info (user_id)
+CREATE TABLE IF NOT EXISTS PERFORMANCES (
+    performance_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    p_title VARCHAR(255) NOT NULL,
+    p_location VARCHAR(255) NOT NULL,
+    poster_url VARCHAR(500),
+    created_per DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE transaction_history (
-    tran_id INT PRIMARY KEY AUTO_INCREMENT,
-    frm_account_no VARCHAR(30) NOT NULL,   -- 출금계좌
-    to_account_no VARCHAR(30) NOT NULL,     -- 입금계좌
-    tran_amt INT NOT NULL,
-    tran_dt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (frm_account_no) REFERENCES accounts_info (account_no),
-	FOREIGN KEY (to_account_no) REFERENCES accounts_info (account_no)
+CREATE TABLE IF NOT EXISTS USERS (
+    user_id BIGINT NOT NULL AUTO_INCREMENT,
+    user_nm VARCHAR(255) NOT NULL,
+    pwd VARCHAR(255) NOT NULL,
+    user_email VARCHAR(255) NOT NULL,
+    role_id BIGINT NOT NULL,
+    user_status VARCHAR(255) NOT NULL,
+    created_user DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (user_id),
+    FOREIGN KEY (role_id) REFERENCES ROLES (role_id),
+    UNIQUE KEY uk_users_user_email (user_email)
 );
+
+CREATE TABLE IF NOT EXISTS PERFORMANCE_ROUND (
+    round_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    performance_id BIGINT NOT NULL,
+    round_time DATETIME NOT NULL,
+    round_status VARCHAR(255) NOT NULL,
+    FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id)
+);
+
+CREATE TABLE IF NOT EXISTS SEATS (
+    seat_id BIGINT NOT NULL AUTO_INCREMENT,
+    round_id BIGINT NOT NULL,
+    seat_row VARCHAR(255) NOT NULL,
+    seat_colume VARCHAR(255) NOT NULL,
+    grade VARCHAR(255) NOT NULL,
+    status VARCHAR(255) NOT NULL,
+
+    PRIMARY KEY (seat_id),
+    FOREIGN KEY (round_id) REFERENCES PERFORMANCE_ROUND (round_id),
+    UNIQUE KEY uk_seats_round_seat (round_id, seat_row, seat_colume)
+);
+
+CREATE TABLE IF NOT EXISTS RESERVATIONS (
+    reservation_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    seat_id BIGINT NOT NULL,
+    round_id BIGINT NOT NULL,
+    reserved_status VARCHAR(255) NOT NULL DEFAULT 'reserved',
+    created_reserved DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES USERS (user_id),
+    FOREIGN KEY (seat_id) REFERENCES SEATS (seat_id),
+    FOREIGN KEY (round_id) REFERENCES PERFORMANCE_ROUND (round_id)
+);
+
+SHOW TABLES;
