@@ -16,6 +16,14 @@ public class PerformanceController {
         this.performanceService = performanceService;
     }
 
+    /***********************************
+     *  URL      :  "/events"
+     *  이름      :   list
+     *  기능      :   공연조회
+     *  method   :   GET
+     *  param    :
+     *  result   :   List<PerformanceDTO>
+     ************************************/
     @GetMapping
     public List<PerformanceDTO> list() {
         return performanceService.getAllPerformances();
