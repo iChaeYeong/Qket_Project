@@ -62,17 +62,22 @@ export default function BookButton({ roundId, openTime, roundTime, title }: Prop
       <button
         className="btnPrimary"
         style={{ padding: "4px 12px", fontSize: 12 }}
-        onClick={() => { alert(`예매 오픈 전입니다.\n오픈 시각: ${new Date(openTime).toLocaleString("ko-KR")}`); }}
+        onClick={() => {
+          const now = new Date().toLocaleString("ko-KR");
+          alert(`예매 오픈 전입니다.\n현재 시각: ${now}\n오픈 시각: ${new
+            Date(openTime).toLocaleString("ko-KR")}`);
+        }}
       >
         예매하기
       </button>
     );
   }
 
-  // [BOOK-OPEN] 오픈 이후 — 대기열 페이지로 이동
+  // [BOOK-OPEN] 오픈 이후 — 좌석 선택 페이지로 이동
+  // TODO: 대기열 구현 후 아래 href 를 `/queue?scheduleId=${roundId}&title=${encodeURIComponent(title)}` 로 교체
   return (
     <Link
-      href={`/queue?scheduleId=${roundId}&title=${encodeURIComponent(title)}`}
+      href={`/seats/${roundId}`}
       className="btnPrimary"
       style={{ padding: "4px 12px", fontSize: 12 }}
     >

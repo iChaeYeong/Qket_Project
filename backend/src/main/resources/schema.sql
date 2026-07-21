@@ -85,5 +85,20 @@ CREATE TABLE IF NOT EXISTS RESERVATIONS (
     FOREIGN KEY (performance_id) REFERENCES PERFORMANCES (performance_id),
     UNIQUE KEY uk_reservations_seat_round (seat_id, round_id)
 );
+-- Test용 (예매 이력 남기기)
+CREATE TABLE IF NOT EXISTS RESERVATION_HISTORY (
+    history_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id VARCHAR(50) NOT NULL,
+    seat_id BIGINT NOT NULL,  
+    round_id BIGINT NOT NULL,
+    performance_id BIGINT NOT NULL,
+    action VARCHAR(50) NOT NULL,  -- 'RESERVED' / 'CANCELLED'
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES USERS(user_id),
+    FOREIGN KEY (seat_id) REFERENCES SEATS(seat_id),
+    FOREIGN KEY (round_id) REFERENCES PERFORMANCE_ROUND(round_id),
+    FOREIGN KEY (performance_id) REFERENCES PERFORMANCES(performance_id)
+);
 
 SHOW TABLES;
