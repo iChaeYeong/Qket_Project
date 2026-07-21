@@ -26,8 +26,8 @@ public class ReservationController {
             return Map.of("success", false, "message", "로그인이 필요합니다.");
         }
         Long seatId = body.get("seatId");
-        Long roundId = body.get("roundId");
-        return reservationService.reserve(loginUser.getUserId(), seatId, roundId);
+        Long scheduleId = body.get("scheduleId");
+        return reservationService.reserve(loginUser.getUserId(), seatId, scheduleId);
     }
 
     @GetMapping("/my")
