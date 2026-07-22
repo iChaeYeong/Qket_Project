@@ -8,7 +8,7 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: team5/ecr/qket
-  EKS_CLUSTER_NAME: team5-kube-practice
+  EKS_CLUSTER_NAME: team5-kube-practice-test
 
 jobs:
   changes:
@@ -56,6 +56,17 @@ jobs:
 
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+      - name: Apply DB Secret
+        run: |
+          kubectl create secret generic my-app-secrets \
+            --from-literal=DB_HOST=${{ secrets.DB_HOST }} \
+            --from-literal=DB_PORT=${{ secrets.DB_PORT }} \
+            --from-literal=DB_NAME=${{ secrets.DB_NAME }} \
+            --from-literal=DB_USERNAME=${{ secrets.DB_USERNAME }} \
+            --from-literal=DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+            --from-literal=REDIS_HOST=${{ secrets.REDIS_HOST }} \
+            -n default --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy to EKS
         run: |

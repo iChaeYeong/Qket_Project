@@ -1,0 +1,94 @@
+# =========================================================
+# prod Backend Deployment, service
+# =========================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qket-backend
+  namespace: qket-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: qket-backend
+  template:
+    metadata:
+      labels:
+        app: qket-backend
+    spec:
+      containers:
+        - name: qket-backend
+          # GitHub Actions에서 sed 로 치환
+          # sed -i "s|BACKEND_IMAGE|$REGISTRY/$REPOSITORY:$IMAGE_TAG|g"
+          image: BACKEND_IMAGE
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-config # env_qKet.yaml의 ConfigMap
+            - secretRef:
+                name: db-secrets # env_qKet.yaml의 DB Secret
+            - secretRef:
+                name: redis-secrets # env_qKet.yaml의 Redis Secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qket-backend-service
+  namespace: qket-prod
+spec:
+  type: ClusterIP
+  selector:
+    app: qket-backend
+  ports:
+    - port: 80
+      targetPort: 8080
+
+---
+# =========================================================
+# dev Backend Deployment, service
+# =========================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qket-backend
+  namespace: qket-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qket-backend
+  template:
+    metadata:
+      labels:
+        app: qket-backend
+    spec:
+      containers:
+        - name: qket-backend
+          image: 727646470302.dkr.ecr.ap-northeast-2.amazonaws.com/team5/ecr/qket:BACKEND_IMAGE_TAG
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: db-secrets
+            - secretRef:
+                name: redis-secrets
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qket-backend-service
+  namespace: qket-dev
+spec:
+  type: ClusterIP
+  selector:
+    app: qket-backend
+  ports:
+    - port: 80
+      targetPort: 8080

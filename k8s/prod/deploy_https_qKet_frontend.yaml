@@ -1,35 +1,30 @@
+# =========================================================
+# prod Frontend Deployment
+# =========================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: qket-frontend
-  # TODO: 배포 환경에 따라 namespace 지정
-  # namespace: qket-prod
-  # namespace: qket-dev
-
+  namespace: qket-prod
 spec:
   revisionHistoryLimit: 2
-  replicas: 1
-  # TODO: prod 배포 시 replicas: 2 이상으로 변경
-
+  replicas: 2
   selector:
     matchLabels:
       app: qket-frontend
-
   template:
     metadata:
       labels:
         app: qket-frontend
-
     spec:
       containers:
         - name: qket-frontend
-          # TODO: 배포 시 최신 이미지 태그로 업데이트
-          image: 727646470302.dkr.ecr.ap-northeast-2.amazonaws.com/team5/ecr/qket:frontend-7.1
+          # GitHub Actions에서 sed 로 치환
+          # sed -i "s|FRONTEND_IMAGE|$REGISTRY/$REPOSITORY:$IMAGE_TAG|g"
+          image: FRONTEND_IMAGE
           imagePullPolicy: Always
-
           ports:
             - containerPort: 3000
-
           resources:
             limits:
               cpu: "1"
@@ -37,26 +32,21 @@ spec:
             requests:
               cpu: "0.5"
               memory: "250Mi"
-
           env:
             - name: BACKEND_URL
-              # TODO: backend Service name 변경 시 여기도 맞춰서 수정
-              # 현재 account-backend-service → springboot-service 로 변경 예정
-              value: "http://account-backend-service"
+              value: "http://qket-backend-service"  # ClusterIP 서비스명
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: qket-frontend-service
-  # TODO: namespace 추가 (Deployment와 동일)
-
+  namespace: qket-prod
 spec:
-  type: ClusterIP  # ALB Ingress가 외부 트래픽을 여기로 라우팅
-
+  type: ClusterIP
   ports:
     - port: 80
       targetPort: 3000
-
   selector:
     app: qket-frontend
+
