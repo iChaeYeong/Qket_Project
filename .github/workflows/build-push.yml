@@ -54,7 +54,7 @@ jobs:
         run: |
           kubectl create configmap app-config \
             --from-literal=DB_PORT=3306 \
-            --from-literal=DB_NAME=qket_dev \
+            --from-literal=DB_NAME=qket \
             --from-literal=REDIS_PORT=6379 \
             --from-literal=BACKEND_URL=http://qket-backend-service \
             -n ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
