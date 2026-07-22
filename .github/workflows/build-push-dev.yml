@@ -4,8 +4,9 @@ on:
   push:
     branches:
       - dev # dev
+  workflow_dispatch:
 
-# [B] 공통 환경변수 - 리전, ECR 경로, 클러스터명, 네임스페이스
+# 공통 환경변수 - 리전, ECR 경로, 클러스터명, 네임스페이스
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: team5/ecr/qket
@@ -17,8 +18,8 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch' }}
+      frontend: ${{ steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
