@@ -8,8 +8,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import type { Seat } from "@/lib/data/types";
+import { getSeats } from "@/lib/api/seats"
+import { createReservation } from "@/lib/api/reservations"
+
 
 // 등급 표시 라벨
 const GRADE_LABEL: Record<string, string> = { VIP: "VIP석", R: "R석", S: "S석" };
@@ -20,18 +23,9 @@ const GRADE_PRICE: Record<string, string> = { VIP: "220,000원", R: "154,000원"
 // 좌석 행/열 구성 (백엔드 DB와 맞춰야 함)
 const ROWS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-// [TODO-SEATS-GRADE] 행 → 등급 매핑 (백엔드 기준과 일치해야 함)
-// A,B → VIP / C,D,E → R / F,G,H → S
-function getGrade(row: string): "VIP" | "R" | "S" {
-  if (["A", "B"].includes(row)) return "VIP";
-  if (["C", "D", "E"].includes(row)) return "R";
-  return "S";
-}
-
-// [TODO-SEATS-PARAMS] Next.js 14 App Router: params 는 Promise 로 받아야 할 수도 있음
-// 현재 { params: { scheduleId: string } } 로 받고 있음
-export default function SeatsPage({ params }: { params: { scheduleId: string } }) {
-  const { scheduleId } = params;
+export default function SeatsPage() {
+  //동적라우팅 값 가져오기
+  const { scheduleId } = useParams<{ scheduleId: string }>();
   const router = useRouter();
 
   // 좌석 목록
@@ -46,21 +40,30 @@ export default function SeatsPage({ params }: { params: { scheduleId: string } }
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // [TODO-SEATS-FETCH] 컴포넌트 마운트 시 좌석 목록 불러오기
+  // 컴포넌트 마운트 시 좌석 목록 불러오기
   // lib/api/seats.ts 의 getSeats(scheduleId) 호출 → GET /api/seats/round/{scheduleId}
   // 응답 배열을 setSeats 에 넣기
   // 실패 시 setSeats([]) 또는 에러 표시
   useEffect(() => {
-    // 구현 필요
-    setLoading(false);
+    getSeats(Number(scheduleId))
+      .then(setSeats)
+      .catch(() => setSeats([]))
+      .finally(() => setLoading(false));
   }, [scheduleId]);
+
 
   // [TODO-SEATS-SELECT] 좌석 클릭 시 실행
   // status === "AVAILABLE" 인 좌석만 선택 가능
   // 이미 선택된 좌석 다시 클릭 시 선택 해제
+
   const handleSelect = (seat: Seat) => {
-    // 구현 필요
+    if (seat.status !== "AVAILABLE") {
+      alert("이미 선택된 좌석입니다.")
+      return;
+    }
+    setSelected(prev => prev?.seatId === seat.seatId ? null : seat);
   };
+
 
   // [TODO-SEATS-RESERVE] 예매하기 버튼 클릭 시 실행
   // 1. selected 없으면 리턴
@@ -72,7 +75,20 @@ export default function SeatsPage({ params }: { params: { scheduleId: string } }
   // 6. catch 블록에서 setError("서버에 연결할 수 없습니다.")
   // 7. finally 에서 setBooking(false)
   const handleReserve = async () => {
-    // 구현 필요
+    if (!selected) return; //아무것도 선택하지 않고 예매 시
+
+    setBooking(true);
+    try {
+      await createReservation(selected.reservationId, Number(scheduleId), selected.seatId);
+      setSuccess(true);
+      setTimeout(() => router.push("/mypage"), 2000); //예매 성공 시 2초뒤 마이페이지로(예매조회)
+    } catch (e: any) {
+      setError(e?.message ?? "서버에 연결할 수 없습니다.");
+    } finally {
+      setBooking(false);
+    }
+
+
   };
 
   // 좌석 버튼 CSS 클래스 결정
@@ -96,6 +112,9 @@ export default function SeatsPage({ params }: { params: { scheduleId: string } }
     row,
     seats: seats.filter(s => s.seatRow === row).sort((a, b) => Number(a.seatColumn) - Number(b.seatColumn)),
   }));
+
+  // 컬럼 번호 헤더용 (첫 번째 행 기준)
+  const colCount = byRow.find(r => r.seats.length > 0)?.seats.length ?? 0;
 
   return (
     <>
@@ -139,6 +158,17 @@ export default function SeatsPage({ params }: { params: { scheduleId: string } }
 
               {/* 좌석 그리드 */}
               <div className="seatGrid">
+                {/* 컬럼 번호 헤더 */}
+                {colCount > 0 && (
+                  <div className="seatRow">
+                    <span className="seatRowLabel" />
+                    {Array.from({ length: colCount }, (_, i) => (
+                      <span key={i} style={{ width: 28, textAlign: "center", fontSize: 10, color: "var(--text-3)", flexShrink: 0 }}>
+                        {i + 1}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {byRow.map(({ row, seats: rowSeats }) => (
                   <div key={row} className="seatRow">
                     <span className="seatRowLabel">{row}</span>

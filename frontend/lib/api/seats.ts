@@ -3,5 +3,5 @@ import type { Seat } from "../data/types";
 
 // GET /api/seats/round/{roundId}
 export async function getSeats(roundId: number): Promise<Seat[]> {
-  return apiFetch<Seat[]>(`/seats/round/${roundId}`);
+  return apiFetch<Seat[]>(`/schedules/${roundId}/seats`);
 }
