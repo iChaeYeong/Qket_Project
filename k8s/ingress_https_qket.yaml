@@ -3,7 +3,7 @@ kind: Ingress
 metadata:
   name: app-alb-ingress
   # TODO: namespace 추가
-  # namespace: ticketbox-prod
+  # namespace: qket
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
