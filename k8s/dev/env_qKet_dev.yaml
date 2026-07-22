@@ -16,9 +16,9 @@ metadata:
   name: db-secrets
   namespace: qket-dev
 stringData:
-  DB_HOST: ""       # RDS 엔드포인트 (application.yml: ${DB_HOST})
-  DB_USERNAME: ""   # DB 유저명    (application.yml: ${DB_USERNAME})
-  DB_PASSWORD: ""   # DB 비밀번호  (application.yml: ${DB_PASSWORD})
+  DB_HOST: "team5-db.cnqmcq6uwqa3.ap-northeast-2.rds.amazonaws.com"       # RDS 엔드포인트 (application.yml: ${DB_HOST})
+  DB_USERNAME: "admin"   # DB 유저명    (application.yml: ${DB_USERNAME})
+  DB_PASSWORD: "infu0720"   # DB 비밀번호  (application.yml: ${DB_PASSWORD})
 
 ---
 apiVersion: v1
@@ -28,7 +28,7 @@ metadata:
   name: redis-secrets
   namespace: qket-dev
 stringData:
-  REDIS_HOST: ""    # ElastiCache 엔드포인트 (application.yml: ${REDIS_HOST})
+  REDIS_HOST: "team5-qkect-cache.q2tpkl.ng.0001.apn2.cache.amazonaws.com"    # ElastiCache 엔드포인트 (application.yml: ${REDIS_HOST})
 
 ---
 # =========================================================
@@ -41,6 +41,6 @@ metadata:
   namespace: qket-dev
 data:
   DB_PORT: "3306"
-  DB_NAME: "qket_dev"
+  DB_NAME: "qket"
   REDIS_PORT: "6379"
   BACKEND_URL: "http://qket-backend-service"
