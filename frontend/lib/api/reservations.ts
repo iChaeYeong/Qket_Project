@@ -2,10 +2,15 @@ import { apiFetch } from "./client";
 import type { Reservation, ApiResult } from "../data/types";
 
 // POST /api/reservations
-export async function createReservation(reservationId: number, roundId: number, seatId: number): Promise<ApiResult> {
+export async function createReservation(
+    reservationId: number,
+    roundId: number,
+    seatId: number,
+    queueToken?: string
+): Promise<ApiResult> {
   return apiFetch<ApiResult>("/reservations", {
     method: "POST",
-    body: { reservationId, roundId, seatId },
+    body: { reservationId, roundId, seatId, queueToken },
   });
 }
 
