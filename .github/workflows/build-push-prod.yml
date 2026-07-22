@@ -5,6 +5,8 @@ on:
     branches:
       - main # main브렌치 Push
 
+  workflow_dispatch:
+
 # [B] 공통 환경변수 - 리전, ECR 경로, 클러스터명, 네임스페이스
 env:
   AWS_REGION: ap-northeast-2
@@ -17,8 +19,8 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      backend: ${{ steps.filter.outputs.backend }}
-      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend == 'true' || github.event_name == 'workflow_dispatch' }}
+      frontend: ${{ steps.filter.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
