@@ -87,6 +87,29 @@ npm run dev
 
 ---
 
+## K8s 배포
+
+```bash
+# Namespace 생성
+kubectl apply -f k8s/namespace_qKet.yaml
+
+# Secret / ConfigMap 적용 (env_qKet.example.yaml 복사 후 값 채울 것)
+cp k8s/env_qKet.example.yaml k8s/env_qKet.yaml
+kubectl apply -f k8s/env_qKet.yaml
+
+# NetworkPolicy 적용
+kubectl apply -f k8s/networkpolicy_qKet.yaml
+
+# Backend / Frontend 배포
+kubectl apply -f k8s/deploy_https_qKet_backend.yaml
+kubectl apply -f k8s/deploy_https_qKet_frontend.yaml
+
+# Ingress 적용
+kubectl apply -f k8s/ingress_https_qket.yaml
+```
+
+---
+
 ## Branch 전략
 
 | 브랜치 | 역할 |
@@ -135,30 +158,5 @@ git push origin dev
 | `chore` | 빌드 설정 등 기타 작업 |
 | `infra` | 인프라 설정 변경 |
 
----
-## K8s 배포
 
-```bash
-# Namespace 생성
-kubectl apply -f k8s/namespace_qKet.yaml
-
-# Secret / ConfigMap 적용 (env_qKet.example.yaml 복사 후 값 채울 것)
-cp k8s/env_qKet.example.yaml k8s/env_qKet.yaml
-kubectl apply -f k8s/env_qKet.yaml
-
-# NetworkPolicy 적용
-kubectl apply -f k8s/networkpolicy_qKet.yaml
-
-# Backend / Frontend 배포
-kubectl apply -f k8s/deploy_https_qKet_backend.yaml
-kubectl apply -f k8s/deploy_https_qKet_frontend.yaml
-
-# Ingress 적용
-kubectl apply -f k8s/ingress_https_qket.yaml
-```
-
-- 기능 추가: `feat: 회원가입 기능 추가`
-- 버그 수정: `fix: 로그인 오류 수정`
-- 문서 수정: `docs: API 문서 업데이트`
-- 코드 리팩토링: `refactor: 로그인 로직 개선`
 
