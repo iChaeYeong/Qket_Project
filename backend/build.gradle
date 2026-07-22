@@ -35,6 +35,8 @@ dependencies {
 
 	//사용자 비밀번호 암호화
 	implementation 'org.springframework.security:spring-security-crypto'
+	//헬스체크 "/actuator/health"
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
 tasks.named('test') {
