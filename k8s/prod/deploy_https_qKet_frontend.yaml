@@ -34,7 +34,8 @@ spec:
               memory: "250Mi"
           env:
             - name: BACKEND_URL
-              value: "http://qket-backend-service"  # ClusterIP 서비스명
+              # 백엔드 context-path가 /api라서 여기서도 붙여야 함 (application.yml server.servlet.context-path: /api)
+              value: "http://qket-backend-service/api"  # ClusterIP 서비스명
 
 ---
 apiVersion: v1
