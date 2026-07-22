@@ -42,12 +42,12 @@ export default function LoginPage() {
 
     try {
       const data = await login(userId, pwd);
-      if (data.success) {
-        setUserSession(data.user ?? null);
-        router.push("/");
-      } else {
+      if (!data.success) {
         setError(data.message ?? "로그인에 실패했습니다.");
+        return;
       }
+      setUserSession(data.user ?? null);
+      router.push("/");
     } catch (e) {
       setError(e instanceof Error ? e.message : "로그인에 실패했습니다.");
     } finally {
@@ -61,7 +61,7 @@ export default function LoginPage() {
   return (
     <div className="authWrap">
       <div className="authBox">
-        <p className="authLogo">TicketBox</p>
+        <p className="authLogo">Q-Ket</p>
         <h1 className="authTitle">로그인</h1>
         <p className="authDesc">공연을 예매하려면 로그인이 필요합니다.</p>
 

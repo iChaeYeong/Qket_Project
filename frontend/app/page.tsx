@@ -34,7 +34,7 @@ const STATUS_CLASS: Record<string, string> = {
 
 export default async function EventsPage() {
   ///events api 호출
-  const res = await fetch(`${process.env.BACKEND_URL}/events`, { cache: "no-store" });
+  const res = await fetch(`http://qket-backend-service/api/events`, { cache: "no-store" });
   const performances: Performance[] = await res.json();
 
   return (
