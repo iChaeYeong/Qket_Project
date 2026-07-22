@@ -22,6 +22,9 @@ public class UserServiceImpl implements UserService {
         UserDTO user = userMapper.findById(userId);
         if (user == null) return null;
         if (!passwordEncoder.matches(pwd, user.getPwd())) return null;
+        if ("SUSPENDED".equals(user.getUserStatus())) {
+            throw new IllegalStateException("정지된 계정입니다. 고객센터에 문의하세요.");
+        }
         user.setPwd(null);
         return user;
     }
