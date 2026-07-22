@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  # TODO: name을 springboot-backend로 변경 (account-backend는 구 뱅킹 앱 이름)
+  # Deployment 이름
+  name: REMOVED-backend
+  # TODO: 배포 환경에 따라 namespace 지정
+  # namespace: ticketbox-prod
+  # namespace: ticketbox-dev
+ 
+  # // namespace: 추가
+  namespace: qKet-prod
+
+spec:
+  replicas: 1
+  # TODO: prod 배포 시 replicas: 2 이상으로 변경
+  selector:
+    matchLabels:
+      # TODO: name 변경 시 app 라벨도 동일하게 맞춰야 함  
+      app: REMOVED-backend
+
+  template:
+    metadata:
+      labels:
+        app: REMOVED-backend
+
+    spec:
+      containers:
+        - name: REMOVED-backend
+          # TODO: 배포 시 최신 이미지 태그로 업데이트
+          # // AWS ECR에 저장된 Spring Boot 이미지
+          image: 727646470302.dkr.ecr.ap-northeast-2.amazonaws.com/team5/ecr/REMOVED:backend-7.3.2
+
+          # // 항상 최신 이미지를 가져옴
+          imagePullPolicy: Always
+
+          ports:
+            # Spring Boot 실행 포트
+            - containerPort: 8080
+
+
+
+          # // ConfigMap과 Secret의 모든 값을 환경변수로 주입
+          envFrom:
+            # // 일반 설정(DB Host, Redis, Context Path 등)
+            - configMapRef:
+                name: REMOVED-config
+
+            # // 민감정보(DB 계정, 비밀번호 등)
+            - secretRef:
+                name: REMOVED-secrets
+
+          ##### configmap과 secret yaml 파일에서 관리
+          # env:
+          #   - name: DB_HOST
+          #     valueFrom:
+          #       secretKeyRef:
+          #         # TODO: dev/prod 별로 다른 Secret 이름 사용
+          #         # prod: my-app-secrets-prod / dev: my-app-secrets-dev
+          #         name: my-app-secrets
+          #         key: DB_HOST
+
+          #   - name: DB_PORT
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: my-app-secrets
+          #         key: DB_PORT
+
+          #   - name: DB_NAME
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: my-app-secrets
+          #         key: DB_NAME
+
+          #   - name: DB_USERNAME
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: my-app-secrets
+          #         key: DB_USERNAME
+
+          #   - name: DB_PASSWORD
+          #     valueFrom:
+          #       secretKeyRef:
+          #         name: my-app-secrets
+          #         key: DB_PASSWORD
+
+          #   - name: SPRING_DATA_REDIS_HOST
+          #     # TODO: ElastiCache 사용 시 엔드포인트로 변경, 클러스터 내 Redis 사용 시 "redis" 유지
+          #     value: redis
+
+          #   - name: SPRING_DATA_REDIS_PORT
+          #     value: "6379"
+
+
+
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  # TODO: name을 springboot-service로 변경 — next.config.mjs의 BACKEND_URL 기본값과 일치시켜야 함
+  # Ingress와 Frontend에서 이 이름으로 접근
+  name: REMOVED-backend-service
+  # TODO: namespace 추가 (Deployment와 동일)
+
+  # // namespace 추가
+  namespace: qKet-prod
+
+spec:
+    # 외부 노출 없음 — Next.js 내부 프록시로만 접근
+  type: ClusterIP
+
+  selector:
+    app: REMOVED-backend
+
+  ports:
+    # Service 포트
+    - port: 80
+
+      # Spring Boot 컨테이너 포트
+      targetPort: 8080

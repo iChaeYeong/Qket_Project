@@ -5,6 +5,10 @@ metadata:
   # TODO: namespace 추가
   # namespace: ticketbox-prod
   # namespace: ticketbox-dev
+
+  # // namespace 추가
+  namespace: qKet-prod
+
   # 참고: prod 환경에서는 클러스터 내 Redis 대신 ElastiCache 사용 권장
   #       ElastiCache 사용 시 이 Deployment는 불필요하고 backend env의 SPRING_DATA_REDIS_HOST만 변경
 spec:
@@ -29,6 +33,8 @@ kind: Service
 metadata:
   name: redis
   # TODO: namespace 추가 (Deployment와 동일)
+  # // namespace 추가
+  namespace: qKet-prod
 spec:
   ports:
     - port: 6379

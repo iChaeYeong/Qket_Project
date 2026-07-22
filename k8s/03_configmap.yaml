@@ -1,0 +1,25 @@
+# // ConfigMap 생성
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: REMOVED-config
+  # // namespcae 추가
+  namespace: qKet-prod
+
+data:
+  # AWS RDS(MySQL) 엔드포인트
+  DB_HOST: REMOVED
+  # MySQL 포트 번호
+  DB_PORT: "REMOVED"
+  # 사용할 데이터베이스 이름
+  DB_NAME: REMOVED
+
+  # Kubernetes 내부 DNS를 통해 redis 서비스로 연결
+  REDIS_HOST: redis
+  # // SPRING_DATA_REDIS_HOST: redis  기존에 만들어져 있던 것 -> 백엔드 application.yaml 파일에 맞춤
+  # -> 백엔드 application.yaml 변수에 맞춤
+  
+  # Redis 포트 번호
+  REDIS_PORT: "6379"
+  # // SPRING_DATA_REDIS_PORT: "6379"

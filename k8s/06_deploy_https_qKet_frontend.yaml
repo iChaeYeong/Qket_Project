@@ -6,6 +6,9 @@ metadata:
   # namespace: ticketbox-prod
   # namespace: ticketbox-dev
 
+  # // namespcae 추가
+  namespace: qKet-prod
+
 spec:
   revisionHistoryLimit: 2
   replicas: 1
@@ -42,7 +45,7 @@ spec:
             - name: BACKEND_URL
               # TODO: backend Service name 변경 시 여기도 맞춰서 수정
               # 현재 account-backend-service → springboot-service 로 변경 예정
-              value: "http://account-backend-service"
+              value: "http://REMOVED-backend-service"
 
 ---
 apiVersion: v1
@@ -50,6 +53,9 @@ kind: Service
 metadata:
   name: REMOVED-frontend-service
   # TODO: namespace 추가 (Deployment와 동일)
+
+  # // namespace 추가
+  namespace: qKet-prod
 
 spec:
   type: ClusterIP  # ALB Ingress가 외부 트래픽을 여기로 라우팅
