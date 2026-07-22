@@ -9,6 +9,7 @@ metadata:
   name: app-alb-ingress
   namespace: qket-dev
   annotations:
+    alb.ingress.kubernetes.io/group.name: qket
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
 
