@@ -1,5 +1,6 @@
 package com.exam.reservation.service;
 
+import com.exam.queue.service.QueueService;
 import com.exam.reservation.dto.ReservationDTO;
 import com.exam.reservation.mapper.ReservationMapper;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,16 +16,19 @@ public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationMapper reservationMapper;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final QueueService queueService;
 
     public ReservationServiceImpl(ReservationMapper reservationMapper,
-                                  RedisTemplate<String, Object> redisTemplate) {
+                                  RedisTemplate<String, Object> redisTemplate,
+                                  QueueService queueService) {
         this.reservationMapper = reservationMapper;
         this.redisTemplate = redisTemplate;
+        this.queueService = queueService;
     }
 
     @Override
     @Transactional
-    public Map<String, Object> reserve(String userId,Long reservationId, Long roundId,Long seatId) {
+    public Map<String, Object> reserve(String userId, Long reservationId, Long roundId, Long seatId, String queueToken) {
         String lockKey = "lock:reservation:" + seatId;
 
         // Redis 분산 락 획득 시도 (TTL 10초)
@@ -47,6 +51,17 @@ public class ReservationServiceImpl implements ReservationService {
 
             reservation.setAction("RESERVED");
             reservationMapper.insertHistory(reservation);
+
+            // 예매 성공 시 대기열 active 자리 즉시 반납
+            // 대기열을 거치지 않고 들어온 요청일 수도 있으니 토큰 없으면 그냥 건너뜀
+            // 반납 자체가 실패해도 예매 성공에는 영향 주지 않도록 예외를 삼킴
+            if (queueToken != null && !queueToken.isBlank()) {
+                try {
+                    queueService.leave(queueToken, userId);
+                } catch (Exception e) {
+                    // 반납 실패는 로그만 남기고 무시 (TTL로 나중에 자동 정리됨)
+                }
+            }
 
             return Map.of("success", true, "message", "예매가 완료되었습니다.");
         } finally {

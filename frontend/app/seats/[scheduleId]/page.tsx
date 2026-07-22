@@ -8,7 +8,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import type { Seat } from "@/lib/data/types";
 import { getSeats } from "@/lib/api/seats"
 import { createReservation } from "@/lib/api/reservations"
@@ -26,6 +26,8 @@ const ROWS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 export default function SeatsPage() {
   //동적라우팅 값 가져오기
   const { scheduleId } = useParams<{ scheduleId: string }>();
+  const searchParams = useSearchParams();
+  const queueToken = searchParams.get("queueToken") ?? undefined;
   const router = useRouter();
 
   // 좌석 목록
@@ -79,9 +81,13 @@ export default function SeatsPage() {
 
     setBooking(true);
     try {
-      await createReservation(selected.reservationId, Number(scheduleId), selected.seatId);
-      setSuccess(true);
-      setTimeout(() => router.push("/mypage"), 2000); //예매 성공 시 2초뒤 마이페이지로(예매조회)
+      const result = await createReservation(selected.reservationId, Number(scheduleId), selected.seatId, queueToken);
+      if (result.success) {
+        setSuccess(true);
+        setTimeout(() => router.push("/mypage"), 2000);
+      } else {
+        setError(result.message ?? "예매에 실패했습니다.");
+      } //예매 성공 시 2초뒤 마이페이지로(예매조회)
     } catch (e: any) {
       setError(e?.message ?? "서버에 연결할 수 없습니다.");
     } finally {
