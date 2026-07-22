@@ -2,6 +2,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app-alb-ingress
+  # TODO: namespace 추가
+  # namespace: ticketbox-prod
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
@@ -11,12 +13,18 @@ metadata:
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
 
+    # TODO: prod는 전체 허용, dev Ingress에는 아래 주석 해제 후 허용 IP 입력
+    # alb.ingress.kubernetes.io/inbound-cidrs: "내IP/32"
+
 spec:
   ingressClassName: alb
   rules:
+    # TODO: 도메인을 app.lcy0813.click 으로 변경
     - host: app.jun979.click
       http:
         paths:
+          # TODO: /api 경로 제거 — 백엔드는 Next.js 내부 프록시로만 접근해야 함
+          #       외부에서 /api 직접 호출 차단이 목적
           - path: /api
             pathType: Prefix
             backend:

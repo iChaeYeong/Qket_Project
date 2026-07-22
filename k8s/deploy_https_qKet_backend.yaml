@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # TODO: name을 springboot-backend로 변경 (account-backend는 구 뱅킹 앱 이름)
+  name: account-backend
+  # TODO: 배포 환경에 따라 namespace 지정
+  # namespace: ticketbox-prod
+  # namespace: ticketbox-dev
+spec:
+  replicas: 1
+  # TODO: prod 배포 시 replicas: 2 이상으로 변경
+  selector:
+    matchLabels:
+      # TODO: name 변경 시 app 라벨도 동일하게 맞춰야 함
+      app: account-backend
+  template:
+    metadata:
+      labels:
+        app: account-backend
+    spec:
+      containers:
+        - name: account-backend
+          # TODO: 배포 시 최신 이미지 태그로 업데이트
+          image: 727646470302.dkr.ecr.ap-northeast-2.amazonaws.com/team5/ecr/qket:backend-7.3.2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  # TODO: dev/prod 별로 다른 Secret 이름 사용
+                  # prod: my-app-secrets-prod / dev: my-app-secrets-dev
+                  name: my-app-secrets
+                  key: DB_HOST
+
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: my-app-secrets
+                  key: DB_PORT
+
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: my-app-secrets
+                  key: DB_NAME
+
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: my-app-secrets
+                  key: DB_USERNAME
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: my-app-secrets
+                  key: DB_PASSWORD
+
+            - name: SPRING_DATA_REDIS_HOST
+              # TODO: ElastiCache 사용 시 엔드포인트로 변경, 클러스터 내 Redis 사용 시 "redis" 유지
+              value: redis
+
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # TODO: name을 springboot-service로 변경 — next.config.mjs의 BACKEND_URL 기본값과 일치시켜야 함
+  name: account-backend-service
+  # TODO: namespace 추가 (Deployment와 동일)
+spec:
+  type: ClusterIP  # 외부 노출 없음 — Next.js 내부 프록시로만 접근
+  selector:
+    app: account-backend
+  ports:
+    - port: 80
+      targetPort: 8080
