@@ -48,13 +48,13 @@ spec:
 
 ---
 # =========================================================
-# dev Backend Deployment, service
+# prod Backend Deployment, service
 # =========================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: qket-backend
-  namespace: qket-dev
+  namespace: qket-prod
 spec:
   replicas: 1
   selector:
@@ -67,7 +67,7 @@ spec:
     spec:
       containers:
         - name: qket-backend
-          image: 727646470302.dkr.ecr.ap-northeast-2.amazonaws.com/team5/ecr/qket:BACKEND_IMAGE_TAG
+          image: 727646470302.dkr.ecr.ap-northeast-2.amazonaws.com/team5/ecr/qket:backend-3.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -84,7 +84,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: qket-backend-service
-  namespace: qket-dev
+  namespace: qket-prod
 spec:
   type: ClusterIP
   selector:
