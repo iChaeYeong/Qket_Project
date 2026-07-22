@@ -120,6 +120,16 @@ jobs:
           sed "s|BACKEND_IMAGE|$REGISTRY/$ECR_REPOSITORY:$TAG|" k8s/dev/deploy_https_qKet_backend_dev.yaml | kubectl apply -f -
           kubectl rollout status deployment/qket-backend -n ${{ env.K8S_NAMESPACE }}
 
+      - name: Verify backend deployment
+        run: |
+          echo "=== Deployment ==="
+          kubectl get deployment qket-backend -n ${{ env.K8S_NAMESPACE }}
+          echo "=== Pods ==="
+          kubectl get pods -l app=qket-backend -n ${{ env.K8S_NAMESPACE }}
+          echo "=== Image ==="
+          kubectl get pod -l app=qket-backend -n ${{ env.K8S_NAMESPACE }} \
+            -o jsonpath='{.items[0].spec.containers[0].image}'
+
   # 프론트엔드 빌드/배포 - frontend/** 변경 시에만 실행
   build-frontend:
     needs: [changes, apply-manifests]
@@ -160,3 +170,13 @@ jobs:
           TAG=frontend-$(echo ${{ github.sha }} | cut -c1-7)
           sed "s|FRONTEND_IMAGE|$REGISTRY/$ECR_REPOSITORY:$TAG|" k8s/dev/deploy_https_qKet_frontend_dev.yaml | kubectl apply -f -
           kubectl rollout status deployment/qket-frontend -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Verify frontend deployment
+        run: |
+          echo "=== Deployment ==="
+          kubectl get deployment qket-frontend -n ${{ env.K8S_NAMESPACE }}
+          echo "=== Pods ==="
+          kubectl get pods -l app=qket-frontend -n ${{ env.K8S_NAMESPACE }}
+          echo "=== Image ==="
+          kubectl get pod -l app=qket-frontend -n ${{ env.K8S_NAMESPACE }} \
+            -o jsonpath='{.items[0].spec.containers[0].image}'
