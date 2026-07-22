@@ -1,0 +1,157 @@
+name: Build and Push to ECR
+
+on:
+  push:
+    branches:
+      - dev
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: team5/ecr/qket
+  EKS_CLUSTER_NAME: team5-kube-practice-test
+  K8S_NAMESPACE: qket-dev
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
+  apply-manifests:
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+      # 순서 중요: 1) Namespace -> 2) ConfigMap -> 3) Secret -> 4) Redis -> 5) Ingress -> 6) NetworkPolicy
+      # backend/frontend Deployment는 이미지 플레이스홀더(BACKEND_IMAGE/FRONTEND_IMAGE)를 sed로 치환해야 해서
+      # 여기가 아니라 build-backend/build-frontend job에서 각각 apply함
+      - name: 1. Apply Namespace
+        run: kubectl apply -f k8s/namespace_qKet.yaml
+
+      - name: 2. Apply ConfigMap
+        run: |
+          kubectl create configmap app-config \
+            --from-literal=DB_PORT=3306 \
+            --from-literal=DB_NAME=qket_dev \
+            --from-literal=REDIS_PORT=6379 \
+            --from-literal=BACKEND_URL=http://qket-backend-service \
+            -n ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: 3. Apply DB/Redis Secret
+        run: |
+          kubectl create secret generic db-secrets \
+            --from-literal=DB_HOST=${{ secrets.DEV_DB_HOST }} \
+            --from-literal=DB_USERNAME=${{ secrets.DEV_DB_USERNAME }} \
+            --from-literal=DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }} \
+            -n ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl create secret generic redis-secrets \
+            --from-literal=REDIS_HOST=${{ secrets.DEV_REDIS_HOST }} \
+            -n ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: 4. Apply Redis
+        run: kubectl apply -f k8s/dev/redis_https_qKet_dev.yaml
+
+      - name: 5. Apply Ingress
+        run: kubectl apply -f k8s/dev/ingress_https_qket_dev.yaml
+
+      - name: 6. Apply NetworkPolicy
+        run: kubectl apply -f k8s/dev/networkpolicy_qKet_dev.yaml
+
+  build-backend:
+    needs: [changes, apply-manifests]
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push backend image
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          TAG: backend-${{ github.sha }}
+        run: |
+          docker build -t $REGISTRY/$ECR_REPOSITORY:$TAG ./backend
+          docker push $REGISTRY/$ECR_REPOSITORY:$TAG
+          echo "Pushed image: $REGISTRY/$ECR_REPOSITORY:$TAG"
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+      - name: Deploy to EKS
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          TAG: backend-${{ github.sha }}
+        run: |
+          sed "s|BACKEND_IMAGE|$REGISTRY/$ECR_REPOSITORY:$TAG|" k8s/dev/deploy_https_qKet_backend_dev.yaml | kubectl apply -f -
+          kubectl rollout status deployment/qket-backend -n ${{ env.K8S_NAMESPACE }}
+
+  build-frontend:
+    needs: [changes, apply-manifests]
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push frontend image
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          TAG: frontend-${{ github.sha }}
+        run: |
+          docker build -t $REGISTRY/$ECR_REPOSITORY:$TAG ./frontend
+          docker push $REGISTRY/$ECR_REPOSITORY:$TAG
+          echo "Pushed image: $REGISTRY/$ECR_REPOSITORY:$TAG"
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
+
+      - name: Deploy to EKS
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          TAG: frontend-${{ github.sha }}
+        run: |
+          sed "s|FRONTEND_IMAGE|$REGISTRY/$ECR_REPOSITORY:$TAG|" k8s/dev/deploy_https_qKet_frontend_dev.yaml | kubectl apply -f -
+          kubectl rollout status deployment/qket-frontend -n ${{ env.K8S_NAMESPACE }}

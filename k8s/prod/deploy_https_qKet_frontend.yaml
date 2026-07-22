@@ -1,0 +1,53 @@
+# =========================================================
+# prod Frontend Deployment
+# =========================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qket-frontend
+  namespace: qket-prod
+spec:
+  revisionHistoryLimit: 2
+  replicas: 2
+  selector:
+    matchLabels:
+      app: qket-frontend
+  template:
+    metadata:
+      labels:
+        app: qket-frontend
+    spec:
+      containers:
+        - name: qket-frontend
+          # GitHub Actions에서 sed 로 치환
+          # sed -i "s|FRONTEND_IMAGE|$REGISTRY/$REPOSITORY:$IMAGE_TAG|g"
+          image: FRONTEND_IMAGE
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          resources:
+            limits:
+              cpu: "1"
+              memory: "500Mi"
+            requests:
+              cpu: "0.5"
+              memory: "250Mi"
+          env:
+            - name: BACKEND_URL
+              # 백엔드 context-path가 /api라서 여기서도 붙여야 함 (application.yml server.servlet.context-path: /api)
+              value: "http://qket-backend-service/api"  # ClusterIP 서비스명
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qket-frontend-service
+  namespace: qket-prod
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 3000
+  selector:
+    app: qket-frontend
+
