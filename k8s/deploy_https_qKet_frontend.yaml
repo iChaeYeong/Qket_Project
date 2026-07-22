@@ -3,8 +3,7 @@ kind: Deployment
 metadata:
   name: qket-frontend
   # TODO: 배포 환경에 따라 namespace 지정
-  # namespace: ticketbox-prod
-  # namespace: ticketbox-dev
+  # namespace: qket
 
 spec:
   revisionHistoryLimit: 2
