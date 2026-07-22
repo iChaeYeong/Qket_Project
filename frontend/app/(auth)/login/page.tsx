@@ -41,10 +41,12 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const data = await login(userId, pwd); // await 를 사용해서 login 함수 끝날때까지 기다렸다가 다 끝나면 "/"로 리다이렉션
-      setUserSession(data.user ?? null); // data.user 가 undefined면 null 로 변환 아니면 값 저장
-      console.log(data)
-
+      const data = await login(userId, pwd);
+      if (!data.success) {
+        setError(data.message ?? "로그인에 실패했습니다.");
+        return;
+      }
+      setUserSession(data.user ?? null);
       router.push("/");
     } catch (e) {
       setError(e instanceof Error ? e.message : "로그인에 실패했습니다.");
