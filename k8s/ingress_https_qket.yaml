@@ -1,37 +1,89 @@
+############################
+# ingress_https_REMOVED.yaml  #
+############################
+
+# ket-prod
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app-alb-ingress
-  # TODO: namespace 추가
-  # namespace: ticketbox-prod
+  namespace: REMOVED-prod
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
 
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:727646470302:certificate/a9789e71-7453-43d9-b0db-ad2ac973f4c0
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:727646470302:certificate/a9789e71-7453-43d9-b0db-ad2ac973f4c0 # ACM 인증서 ARN
 
+    # 80으로 받은 포트 443으로 리다이렉션
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
 
-    # TODO: prod는 전체 허용, dev Ingress에는 아래 주석 해제 후 허용 IP 입력
+    # AWS 콘솔 보안그룹 > 직접 수동으로 인바운드 규칙 설정 하거나 아랫쪽 코드 사용
+    # prod 는 모든 사용IP inbound 허용
+    #alb.ingress.kubernetes.io/inbound-cidrs: "0.0.0.0/0"
+
+spec:
+  ingressClassName: alb
+  rules:
+    - host: app.jun979.click
+      http:
+        paths:
+          # 주석 이유 - alb -> frontend(next.js) -> backend(spring boot) 로 가기때문에
+          # backend service 불필요
+          #
+          # - path: /
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: REMOVED-backend-service
+          #       port:
+          #         number: 80
+
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: REMOVED-frontend-service
+                port:
+                  number: 80
+
+---
+# REMOVED-dev
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-alb-ingress
+  namespace: REMOVED-dev
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:727646470302:certificate/a9789e71-7453-43d9-b0db-ad2ac973f4c0 # ACM 인증서 ARN
+
+    # 80으로 받은 포트 443으로 리다이렉션
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+
+    # AWS 콘솔 보안그룹 > 직접 수동으로 인바운드 규칙 설정 하거나 아랫쪽 코드 사용
+    # DEV 허용할 IP로 변경 (본인 IP/32)
     # alb.ingress.kubernetes.io/inbound-cidrs: "내IP/32"
 
 spec:
   ingressClassName: alb
   rules:
-    # TODO: 도메인을 app.lcy0813.click 으로 변경
-    - host: app.jun979.click
+    - host: dev.jun979.click ## dev 쪽 Router53 추가 필요
       http:
         paths:
-          # TODO: /api 경로 제거 — 백엔드는 Next.js 내부 프록시로만 접근해야 함
-          #       외부에서 /api 직접 호출 차단이 목적
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: account-backend-service
-                port:
-                  number: 80
+          # 주석 이유 - alb -> frontend(next.js) -> backend(spring boot) 로 가기때문에
+          # backend service 불필요
+          #
+          # - path: /
+          #   pathType: Prefix
+          #   backend:
+          #     service:
+          #       name: REMOVED-backend-service
+          #       port:
+          #         number: 80
 
           - path: /
             pathType: Prefix
