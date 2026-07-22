@@ -20,7 +20,7 @@ spec:
       containers:
         - name: qket-frontend
           # GitHub Actions에서 sed 로 치환
-          image: FRONTEND_IMAGE
+          image: 727646470302.dkr.ecr.ap-northeast-2.amazonaws.com/team5/ecr/qket:frontend-6.0
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
