@@ -30,9 +30,9 @@ spec:
             requests:
               cpu: "0.5"
               memory: "250Mi"
-          # env:
-          #   - name: BACKEND_URL
-          #     value: "http://qket-backend-service/api"
+          env:
+            - name: BACKEND_URL
+              value: "http://qket-backend-service/api"
 
 ---
 apiVersion: v1
