@@ -3,6 +3,7 @@ package com.exam.common.controller;
 import com.exam.common.dto.UserDTO;
 import com.exam.common.service.UserService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -26,19 +27,25 @@ public class UserController {
      *  result   :   Map<String, Object>
      ************************************/
     @PostMapping("/login")
-    public Map<String, Object> login(@RequestBody UserDTO userDTO, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody UserDTO userDTO, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
-        UserDTO user = userService.login(userDTO.getUserId(), userDTO.getPwd());
-        if (user == null) {
-            result.put("success", false);
-            result.put("message", "아이디 또는 비밀번호가 올바르지 않습니다.");
-        } else {
+        try {
+            UserDTO user = userService.login(userDTO.getUserId(), userDTO.getPwd());
+            if (user == null) {
+                result.put("success", false);
+                result.put("message", "아이디 또는 비밀번호가 올바르지 않습니다.");
+                return ResponseEntity.status(401).body(result);
+            }
             //spring session이 자동으로 user 세션정보 redis에 저장
             session.setAttribute("loginUser", user);
             result.put("success", true);
             result.put("user", user);
+            return ResponseEntity.ok(result);
+        } catch (IllegalStateException e) {
+            result.put("success", false);
+            result.put("message", e.getMessage());
+            return ResponseEntity.status(403).body(result);
         }
-        return result;
     }
 
     /***********************************
