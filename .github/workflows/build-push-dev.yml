@@ -1,10 +1,11 @@
-name: Build and Push to ECR
+name: Build & Deploy DEV
 
 on:
   push:
     branches:
-      - dev
+      - dev # dev
 
+# [B] 공통 환경변수 - 리전, ECR 경로, 클러스터명, 네임스페이스
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: team5/ecr/qket
@@ -12,6 +13,7 @@ env:
   K8S_NAMESPACE: qket-dev
 
 jobs:
+  # 변경 감지 - backend/frontend/그외의것 변경 감지
   changes:
     runs-on: ubuntu-latest
     outputs:
@@ -28,6 +30,7 @@ jobs:
             frontend:
               - 'frontend/**'
 
+  # front 매니페스트 apply - 이미지 무관한 리소스들 (namespace, configmap, secret, ingress 등)
   apply-manifests:
     needs: changes
     runs-on: ubuntu-latest
@@ -44,21 +47,19 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
-      # 순서 중요: 1) Namespace -> 2) ConfigMap -> 3) Secret -> 4) Redis -> 5) Ingress -> 6) NetworkPolicy
-      # backend/frontend Deployment는 이미지 플레이스홀더(BACKEND_IMAGE/FRONTEND_IMAGE)를 sed로 치환해야 해서
-      # 여기가 아니라 build-backend/build-frontend job에서 각각 apply함
       - name: 1. Apply Namespace
         run: kubectl apply -f k8s/namespace_qKet.yaml
 
+      # ConfigMap - GitHub Variables 에서 민감하지 않은 설정값 주입
       - name: 2. Apply ConfigMap
         run: |
           kubectl create configmap app-config \
-            --from-literal=DB_PORT=3306 \
-            --from-literal=DB_NAME=qket \
-            --from-literal=REDIS_PORT=6379 \
-            --from-literal=BACKEND_URL=http://qket-backend-service \
+            --from-literal=DB_PORT=${{ vars.DEV_DB_PORT }} \
+            --from-literal=DB_NAME=${{ vars.DEV_DB_NAME }} \
+            --from-literal=REDIS_PORT=${{ vars.DEV_REDIS_PORT }} \
             -n ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
+      # Secret - GitHub Secrets 에서 DB/Redis 접속 정보 주입
       - name: 3. Apply DB/Redis Secret
         run: |
           kubectl create secret generic db-secrets \
@@ -71,15 +72,13 @@ jobs:
             --from-literal=REDIS_HOST=${{ secrets.DEV_REDIS_HOST }} \
             -n ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: 4. Apply Redis
-        run: kubectl apply -f k8s/dev/redis_https_qKet_dev.yaml
-
-      - name: 5. Apply Ingress
+      - name: 4. Apply Ingress
         run: kubectl apply -f k8s/dev/ingress_https_qket_dev.yaml
 
-      - name: 6. Apply NetworkPolicy
+      - name: 5. Apply NetworkPolicy
         run: kubectl apply -f k8s/dev/networkpolicy_qKet_dev.yaml
 
+  # 백엔드 빌드/배포 - backend/* 변경 시에만 실행
   build-backend:
     needs: [changes, apply-manifests]
     if: needs.changes.outputs.backend == 'true'
@@ -93,16 +92,17 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-
+      # ECR 로그인
       - name: Login to Amazon ECR
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
+      # 이미지 태그: backend-{커밋SHA:앞자리 7글자}
       - name: Build and push backend image
         env:
           REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          TAG: backend-${{ github.sha }}
         run: |
+          TAG=backend-$(echo ${{ github.sha }} | cut -c1-7)
           docker build -t $REGISTRY/$ECR_REPOSITORY:$TAG ./backend
           docker push $REGISTRY/$ECR_REPOSITORY:$TAG
           echo "Pushed image: $REGISTRY/$ECR_REPOSITORY:$TAG"
@@ -110,14 +110,16 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
+      # sed로 BACKEND_IMAGE 플레이스홀더를 실제 이미지로 치환 후 apply
       - name: Deploy to EKS
         env:
           REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          TAG: backend-${{ github.sha }}
         run: |
+          TAG=backend-$(echo ${{ github.sha }} | cut -c1-7)
           sed "s|BACKEND_IMAGE|$REGISTRY/$ECR_REPOSITORY:$TAG|" k8s/dev/deploy_https_qKet_backend_dev.yaml | kubectl apply -f -
           kubectl rollout status deployment/qket-backend -n ${{ env.K8S_NAMESPACE }}
 
+  # 프론트엔드 빌드/배포 - frontend/** 변경 시에만 실행
   build-frontend:
     needs: [changes, apply-manifests]
     if: needs.changes.outputs.frontend == 'true'
@@ -136,11 +138,12 @@ jobs:
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
+      # 이미지 태그: frontend-{커밋SHA}
       - name: Build and push frontend image
         env:
           REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          TAG: frontend-${{ github.sha }}
         run: |
+          TAG=frontend-$(echo ${{ github.sha }} | cut -c1-7)
           docker build -t $REGISTRY/$ECR_REPOSITORY:$TAG ./frontend
           docker push $REGISTRY/$ECR_REPOSITORY:$TAG
           echo "Pushed image: $REGISTRY/$ECR_REPOSITORY:$TAG"
@@ -148,10 +151,11 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
+      # FRONTEND_IMAGE 플레이스홀더를 실제 이미지로 치환 후 apply
       - name: Deploy to EKS
         env:
           REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          TAG: frontend-${{ github.sha }}
         run: |
+          TAG=frontend-$(echo ${{ github.sha }} | cut -c1-7)
           sed "s|FRONTEND_IMAGE|$REGISTRY/$ECR_REPOSITORY:$TAG|" k8s/dev/deploy_https_qKet_frontend_dev.yaml | kubectl apply -f -
           kubectl rollout status deployment/qket-frontend -n ${{ env.K8S_NAMESPACE }}
