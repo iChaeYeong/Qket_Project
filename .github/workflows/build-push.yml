@@ -8,7 +8,7 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: team5/ecr/qket
-  EKS_CLUSTER_NAME: team5-kube-practice
+  EKS_CLUSTER_NAME: team5-kube-practice-test
 
 jobs:
   changes:
