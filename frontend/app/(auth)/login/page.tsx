@@ -59,7 +59,7 @@ export default function LoginPage() {
   return (
     <div className="authWrap">
       <div className="authBox">
-        <p className="authLogo">TicketBox</p>
+        <p className="authLogo">Q-Ket</p>
         <h1 className="authTitle">로그인</h1>
         <p className="authDesc">공연을 예매하려면 로그인이 필요합니다.</p>
 
