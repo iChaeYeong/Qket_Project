@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { QueueStatus } from "@/lib/data/types";
+import { joinQueue, getQueueStatus, leaveQueue } from "@/lib/api/queues";
 
 // [TODO-QUEUE-NOTE]
 // 대기열 흐름:
@@ -33,10 +34,15 @@ function QueueContent() {
 
   // [TODO-QUEUE-INTERVAL] 폴링 인터벌 ref
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // [FIX-QUEUE-CANCEL] 언마운트 이후 도착하는 응답/타이머가 상태를 건드리지 못하게 막는 플래그
+  // (React StrictMode의 effect 이중 실행으로 인해 orphan 타이머가 생기는 문제 방지)
+  const cancelledRef = useRef(false);
 
   // [TODO-QUEUE-STOP] 폴링 중단 함수
   const stopPolling = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
+    if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
   };
 
   // [TODO-QUEUE-POLL] 3초마다 대기열 상태 조회
@@ -45,7 +51,26 @@ function QueueContent() {
   // status === "ENTERED" → stopPolling() 후 1.5초 뒤 router.push(`/seats/${scheduleId}`)
   // status === "EXPIRED" → stopPolling() 후 setError("대기열이 만료되었습니다.")
   const poll = async (token: string) => {
-    // 구현 필요
+    try {
+      const result = await getQueueStatus(token);
+      if (cancelledRef.current) return;
+      setStatus(result);
+
+      if (result.status === "ENTERED") {
+        stopPolling();
+        redirectTimeoutRef.current = setTimeout(() => {
+          if (cancelledRef.current) return;
+          router.push(`/seats/${scheduleId}?queueToken=${token}`);
+        }, 1500);
+      } else if (result.status === "EXPIRED") {
+        stopPolling();
+        setError("대기열이 만료되었습니다.");
+      }
+    } catch (e: any) {
+      if (cancelledRef.current) return;
+      stopPolling();
+      setError(e?.message ?? "서버에 연결할 수 없습니다.");
+    }
   };
 
   // [TODO-QUEUE-JOIN] 페이지 진입 시 대기열 등록
@@ -58,8 +83,35 @@ function QueueContent() {
   // 6. 백엔드 미연결 시 catch 블록에서 에러 표시 또는 데모 모드
   // 7. 컴포넌트 언마운트 시 stopPolling() 호출 (return stopPolling)
   useEffect(() => {
-    // 구현 필요
-    return stopPolling;
+    cancelledRef.current = false;
+
+    if (!scheduleId) {
+      setError("잘못된 접근입니다.");
+      return stopPolling;
+    }
+
+    joinQueue(scheduleId)
+        .then(({ queueToken }) => {
+          if (cancelledRef.current) return;
+          tokenRef.current = queueToken;
+          poll(queueToken);
+          intervalRef.current = setInterval(() => poll(queueToken), 3000);
+        })
+        .catch((e: any) => {
+          if (cancelledRef.current) return;
+          setError(e?.message ?? "대기열 등록에 실패했습니다.");
+        });
+
+    const handleBeforeUnload = () => {
+      if (tokenRef.current) leaveQueue(tokenRef.current);
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      cancelledRef.current = true;
+      stopPolling();
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
   }, [scheduleId]);
 
   // 대기시간 포맷 (초 → "약 N초" 또는 "약 N분")

@@ -28,15 +28,21 @@ public class ReservationController {
      *  result   :   Map<String, Long>, HttpSession
      ************************************/
     @PostMapping
-    public Map<String, Object> reserve(@RequestBody Map<String, Long> body, HttpSession session) {
+    public Map<String, Object> reserve(@RequestBody Map<String, Object> body, HttpSession session) {
         UserDTO loginUser = (UserDTO) session.getAttribute("loginUser");
         if (loginUser == null) {
             return Map.of("success", false, "message", "로그인이 필요합니다.");
         }
-        Long seatId = body.get("seatId");
-        Long roundId = body.get("roundId");
-        Long reservationId = body.get("reservationId");
-        return reservationService.reserve(loginUser.getUserId(), reservationId, roundId, seatId);
+        Long seatId = toLong(body.get("seatId"));
+        Long roundId = toLong(body.get("roundId"));
+        Long reservationId = toLong(body.get("reservationId"));
+        String queueToken = (String) body.get("queueToken");
+        return reservationService.reserve(loginUser.getUserId(), reservationId, roundId, seatId, queueToken);
+    }
+
+    private Long toLong(Object value) {
+        if (value == null) return null;
+        return Long.valueOf(value.toString());
     }
 
     /***********************************
