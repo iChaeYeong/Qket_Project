@@ -14,3 +14,8 @@ export async function joinQueue(scheduleId: number): Promise<{ queueToken: strin
 export async function getQueueStatus(queueToken: string): Promise<QueueStatus> {
   return apiFetch<QueueStatus>(`/queues/${queueToken}`);
 }
+
+// POST /api/queues/{queueToken}/leave
+export async function leaveQueue(queueToken: string): Promise<void> {
+  navigator.sendBeacon(`/api/queues/${queueToken}/leave`);
+}
