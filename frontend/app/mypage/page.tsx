@@ -119,7 +119,7 @@ export default function MyPage() {
 
             <div className="reservationList">
               {reservations.map(r => (
-                <div key={r.historyId} className="reservationCard">
+                <div key={r.reservationId} className="reservationCard">
                   <div className="reservationInfo">
                     <p className="reservationTitle">{r.pTitle}</p>
                     <div className="reservationMeta">
