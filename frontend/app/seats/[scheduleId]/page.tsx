@@ -20,9 +20,6 @@ const GRADE_LABEL: Record<string, string> = { VIP: "VIP석", R: "R석", S: "S석
 // 등급별 가격 (백엔드에서 받아올 수도 있음)
 const GRADE_PRICE: Record<string, string> = { VIP: "220,000원", R: "154,000원", S: "99,000원" };
 
-// 좌석 크기를 키우기 위해 한 행이 길면 절반씩 두 줄로 나눠서 표시 (가로 스크롤 없이, 아래쪽 여백을 활용)
-const SEATS_PER_LINE = 25;
-
 export default function SeatsPage() {
   //동적라우팅 값 가져오기
   const { scheduleId } = useParams<{ scheduleId: string }>();
@@ -149,15 +146,6 @@ export default function SeatsPage() {
     });
   };
 
-  // 좌석 크기를 키운 만큼 한 행(최대 50석)을 SEATS_PER_LINE 단위로 잘라 여러 줄로 렌더링
-  const chunkSeats = <T,>(arr: T[]): T[][] => {
-    const chunks: T[][] = [];
-    for (let i = 0; i < arr.length; i += SEATS_PER_LINE) {
-      chunks.push(arr.slice(i, i + SEATS_PER_LINE));
-    }
-    return chunks.length > 0 ? chunks : [[]];
-  };
-
   return (
     <>
       <div className="pageWrap">
@@ -209,12 +197,29 @@ export default function SeatsPage() {
                         </div>
                         {section.rows.map(({ row, rowIndex, seats: rowSeats }) => {
                           const withOffset = buildCurvedSeats(rowSeats, rowIndex);
-                          const lines = chunkSeats(withOffset);
-                          return lines.map((line, li) => (
-                            <div key={`${row}-${li}`} className="seatRow">
-                              <span className="seatRowLabel">{li === 0 ? row : ""}</span>
+                          const half = Math.ceil(withOffset.length / 2);
+                          const left = withOffset.slice(0, half);
+                          const right = withOffset.slice(half);
+                          // 뒤쪽 행일수록 폭을 좁혀줘서(음수 여백 대신 안쪽 정렬) 부채꼴이 자연스럽게 넓어지는 느낌을 강조
+                          const rowIndent = Math.max(0, (ROWS.length - 1 - rowIndex) * 2);
+                          return (
+                            <div key={row} className="seatRow" style={{ paddingLeft: rowIndent, paddingRight: rowIndent }}>
+                              <span className="seatRowLabel">{row}</span>
                               <div className="seatRowGroup">
-                                {line.map(({ seat, offsetY }) => (
+                                {left.map(({ seat, offsetY }) => (
+                                  <button
+                                    key={seat.seatId}
+                                    className={seatClass(seat)}
+                                    onClick={() => handleSelect(seat)}
+                                    disabled={seat.status !== "AVAILABLE"}
+                                    title={`${row}${seat.seatColume} (${GRADE_LABEL[seat.grade]})`}
+                                    style={{ "--seat-y": `${offsetY}px` } as CSSProperties}
+                                  />
+                                ))}
+                              </div>
+                              {right.length > 0 && <div className="seatAisle" />}
+                              <div className="seatRowGroup">
+                                {right.map(({ seat, offsetY }) => (
                                   <button
                                     key={seat.seatId}
                                     className={seatClass(seat)}
@@ -226,7 +231,7 @@ export default function SeatsPage() {
                                 ))}
                               </div>
                             </div>
-                          ));
+                          );
                         })}
                       </div>
                     );
