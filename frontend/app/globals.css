@@ -574,11 +574,20 @@ a {
 .seatMapWrap {
   flex: 1;
   min-width: 0;
-  overflow-x: auto;
 }
 
-.seatGridScroll {
-  min-width: max-content;
+.seatSection {
+  margin-bottom: 20px;
+}
+
+.seatSection:last-child {
+  margin-bottom: 0;
+}
+
+.seatSectionHeader {
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--border);
 }
 
 .seatStage {

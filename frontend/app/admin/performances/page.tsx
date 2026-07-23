@@ -10,6 +10,7 @@ import {
   updateRound,
   deletePerformance,
   deleteRound,
+  uploadPoster,
   type Venue,
 } from "@/lib/api/admin";
 import type { Performance, PerformanceRound } from "@/lib/data/types";
@@ -94,14 +95,13 @@ export default function AdminPerformancesPage() {
     setEditPreview(URL.createObjectURL(file));
     setEditUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", credentials: "include", body: formData });
-      const data = await res.json();
-      if (data.success) setEditPosterUrl(data.url);
-      else setEditMsg({ text: "이미지 업로드 실패", ok: false });
-    } catch { setEditMsg({ text: "이미지 업로드 실패", ok: false }); }
-    finally { setEditUploading(false); }
+      const url = await uploadPoster(file);
+      setEditPosterUrl(url);
+    } catch (err: any) {
+      setEditMsg({ text: err?.message ?? "이미지 업로드 실패", ok: false });
+    } finally {
+      setEditUploading(false);
+    }
   };
 
   const handleEditSave = async () => {
