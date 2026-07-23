@@ -1,3 +1,7 @@
+// 서버 컴포넌트에서 직접 백엔드 호출 시 사용
+// 로컬: localhost:8080 / Docker(K8s): Dockerfile runner 스테이지에서 CLUSTER_IP 주입
+export const BASE_URL = process.env.CLUSTER_IP ?? 'http://localhost:8080';
+
 // apiFetch<T>(path, options) 사용법:
 //   - body 에 객체 넣으면 자동 JSON.stringify
 //   - 응답 자동 JSON 파싱 → T 타입으로 반환
