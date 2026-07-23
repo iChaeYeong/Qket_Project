@@ -577,9 +577,12 @@ a {
 }
 
 .seatVenue {
-  padding: 8px 12px 22px;
+  /* 공연장(좌석 수)마다 크기가 다르므로 큰 라운드 곡선 대신, 어떤 크기든 안전하게
+     좌석을 다 담을 수 있도록 적당한 라운드 + 넉넉한 패딩만 적용 (전에는 하단 90px 라운드 때문에
+     행이 많은 공연장에서 모서리 좌석이 바깥으로 삐져나오는 문제가 있었음) */
+  padding: 16px 20px 20px;
   border: 1px solid var(--border);
-  border-radius: 16px 16px 90px 90px;
+  border-radius: 16px;
   background: var(--surface2);
 }
 
