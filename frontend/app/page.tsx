@@ -3,6 +3,7 @@
 // 데이터는 async/await 로 직접 fetch, 네비게이션은 <Link> 사용
 
 import BookButton from "@/components/BookButton";
+import { BASE_URL } from "@/lib/api/client";
 
 // 백엔드 PerformanceDTO 와 일치
 type Round = {
@@ -34,7 +35,7 @@ const STATUS_CLASS: Record<string, string> = {
 
 export default async function EventsPage() {
   ///events api 호출
-  const res = await fetch(`http://qket-backend-service/api/events`, { cache: "no-store" });
+  const res = await fetch(`${BASE_URL}/api/events`, { cache: "no-store" });
   const performances: Performance[] = await res.json();
 
   return (
