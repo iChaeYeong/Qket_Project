@@ -20,4 +20,29 @@
         VALUES (#{userId}, #{userNm}, #{pwd}, #{userEmail}, 1, 'ACTIVE')
     </insert>
 
+    <select id="findAll" resultType="UserDTO">
+        SELECT u.user_id     AS userId,
+               u.user_nm     AS userNm,
+               u.user_email  AS userEmail,
+               u.user_status AS userStatus,
+               u.role_id     AS roleId,
+               r.role_name   AS roleName
+        FROM USERS u
+        JOIN ROLES r ON u.role_id = r.role_id
+        ORDER BY u.user_id
+    </select>
+
+    <select id="findAllRoles" resultType="map">
+        SELECT role_id AS roleId, role_name AS roleName FROM ROLES ORDER BY role_id
+    </select>
+
+    <update id="updateUser" parameterType="UserDTO">
+        UPDATE USERS
+        <set>
+            <if test="userStatus != null">user_status = #{userStatus},</if>
+            <if test="roleId != null">role_id = #{roleId},</if>
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
 </mapper>

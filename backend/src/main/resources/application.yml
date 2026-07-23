@@ -32,6 +32,14 @@ management:
   endpoint:
     health:
       show-details: never
+# AWS S3
+cloud:
+  aws:
+    s3:
+      bucket: ${S3_BUCKET:qket-posters}
+    region:
+      static: ${AWS_REGION:ap-northeast-2}
+
 # mybatis
 mybatis:
   mapper-locations: com/exam/**/mapper/*.xml

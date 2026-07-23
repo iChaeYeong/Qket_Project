@@ -31,6 +31,16 @@ export default function SiteNav() {
                 <Link href="/mypage" className={pathname === "/mypage" ? "siteNavLink siteNavLinkActive" : "siteNavLink"}>
                   마이페이지
                 </Link>
+                {(userSession.roleId === 2 || userSession.roleId === 3) && (
+                  <Link href="/admin/performances" className={pathname.startsWith("/admin/performances") ? "siteNavLink siteNavLinkActive" : "siteNavLink"}>
+                    공연 관리
+                  </Link>
+                )}
+                {userSession.roleId === 3 && (
+                  <Link href="/admin/users" className={pathname.startsWith("/admin/users") ? "siteNavLink siteNavLinkActive" : "siteNavLink"}>
+                    사용자 관리
+                  </Link>
+                )}
                 <span className="siteNavUser">{userSession.userNm}님</span>
                 <button className="siteNavLink siteNavLogout" onClick={handleLogout}>
                   로그아웃
