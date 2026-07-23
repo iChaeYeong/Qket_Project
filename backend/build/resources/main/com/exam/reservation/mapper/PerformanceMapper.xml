@@ -17,6 +17,28 @@
         </collection>
     </resultMap>
 
+    <select id="findAllVenues" resultType="VenueDTO">
+        SELECT venue_id AS venueId, venue_name AS venueName FROM VENUE ORDER BY venue_id
+    </select>
+
+    <insert id="insert" parameterType="PerformanceDTO" useGeneratedKeys="true" keyProperty="performanceId">
+        INSERT INTO PERFORMANCES (p_title, venue_id, poster_url)
+        VALUES (#{pTitle}, #{venueId}, #{posterUrl})
+    </insert>
+
+    <insert id="insertRound" parameterType="RoundDTO" useGeneratedKeys="true" keyProperty="roundId">
+        INSERT INTO PERFORMANCE_ROUND (performance_id, round_time, open_time, round_status)
+        VALUES (#{performanceId}, #{roundTime}, #{openTime}, 'OPEN')
+    </insert>
+
+    <insert id="initReservationSlots">
+        INSERT INTO RESERVATIONS (user_id, seat_id, round_id, performance_id, reserved_status)
+        SELECT NULL, s.seat_id, #{roundId}, #{performanceId}, 'AVAILABLE'
+        FROM SEATS s
+        JOIN PERFORMANCES p ON s.venue_id = p.venue_id
+        WHERE p.performance_id = #{performanceId}
+    </insert>
+
     <select id="findAll" resultMap="performanceMap">
         SELECT  A.performance_id,
                 A.p_title,

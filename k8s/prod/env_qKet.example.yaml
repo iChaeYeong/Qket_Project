@@ -44,3 +44,5 @@ data:
   DB_NAME: ""
   REDIS_PORT: ""
   BACKEND_URL: ""
+  AWS_REGION: "" # ex) ap-northeast-2
+  S3_BUCKET: "" # S3 버킷 이름 (포스터 이미지 업로드용)

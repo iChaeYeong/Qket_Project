@@ -12,6 +12,7 @@ import java.util.List;
 public class PerformanceDTO {
 
     private Long performanceId;
+    private Long venueId;
     //소문자 한글자로 인해서 camel-case 가 안먹음
     @JsonProperty("pTitle")
     private String pTitle;

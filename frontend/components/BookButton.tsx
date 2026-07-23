@@ -56,23 +56,34 @@ export default function BookButton({ roundId, openTime, roundTime, title }: Prop
   }, [openTime, roundTime]);
 
 
-  // [BOOK-HIDDEN] 10분 전보다 이전 — 아무것도 렌더링하지 않음
-  if (state === "Before") return <span className="badge badgeClosed">예매 전</span>
+  const openLabel = new Date(openTime).toLocaleString("ko-KR", {
+    month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit",
+  });
 
-  // [BOOK-PENDING] 10분 전 ~ 오픈 전 — 클릭 시 alert
+  // [BOOK-HIDDEN] 10분 전보다 이전 — 오픈 시간 안내
+  if (state === "Before") return (
+    <div style={{ textAlign: "right" }}>
+      <span className="badge badgeClosed">예매 전</span>
+      <p style={{ fontSize: 10, color: "var(--text-3)", marginTop: 3 }}>오픈 {openLabel}</p>
+    </div>
+  );
+
+  // [BOOK-PENDING] 10분 전 ~ 오픈 전 — 클릭 시 alert + 오픈 시간 안내
   if (state === "pending") {
     return (
-      <button
-        className="btnPrimary"
-        style={{ padding: "4px 12px", fontSize: 12 }}
-        onClick={() => {
-          const now = new Date().toLocaleString("ko-KR");
-          alert(`예매 오픈 전입니다.\n현재 시각: ${now}\n오픈 시각: ${new
-            Date(openTime).toLocaleString("ko-KR")}`);
-        }}
-      >
-        예매하기
-      </button>
+      <div style={{ textAlign: "right" }}>
+        <button
+          className="btnPrimary"
+          style={{ padding: "4px 12px", fontSize: 12 }}
+          onClick={() => {
+            const now = new Date().toLocaleString("ko-KR");
+            alert(`예매 오픈 전입니다.\n현재 시각: ${now}\n오픈 시각: ${new Date(openTime).toLocaleString("ko-KR")}`);
+          }}
+        >
+          예매하기
+        </button>
+        <p style={{ fontSize: 10, color: "var(--text-3)", marginTop: 3 }}>오픈 {openLabel}</p>
+      </div>
     );
   }
 

@@ -2,7 +2,7 @@ export type UserDTO = {
   userId: string;
   userNm: string;
   userEmail?: string;
-
+  roleId?: number;
 };
 
 export type ApiResult = {
@@ -18,6 +18,7 @@ export type PerformanceRound = {
   roundId: number;
   performanceId: number;
   roundTime: string;
+  openTime: string;
   roundStatus: "OPEN" | "CLOSED" | "SOLDOUT";
 };
 
