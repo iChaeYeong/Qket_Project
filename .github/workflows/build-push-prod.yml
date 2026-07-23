@@ -61,6 +61,7 @@ jobs:
             --from-literal=REDIS_PORT=${{ vars.PROD_REDIS_PORT }} \
             --from-literal=AWS_REGION=${{ env.AWS_REGION }} \
             --from-literal=S3_BUCKET=${{ vars.PROD_S3_BUCKET }} \
+            --from-literal=CLOUDFRONT_DOMAIN=${{ vars.CLOUDFRONT_DOMAIN }} \
             -n ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
       # Secret - GitHub Secrets 에서 DB/Redis 접속 정보 주입

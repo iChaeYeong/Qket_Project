@@ -34,6 +34,9 @@ public class AdminController {
     @Value("${cloud.aws.region.static:ap-northeast-2}")
     private String region;
 
+    @Value("${cloud.aws.cloudfront.domain:}")
+    private String cloudfrontDomain;
+
     public AdminController(UserMapper userMapper, PerformanceMapper performanceMapper, S3Client s3Client) {
         this.userMapper = userMapper;
         this.performanceMapper = performanceMapper;
@@ -66,7 +69,10 @@ public class AdminController {
                             .build(),
                     software.amazon.awssdk.core.sync.RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
-            String url = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
+            String baseUrl = (cloudfrontDomain != null && !cloudfrontDomain.isBlank())
+                    ? "https://" + cloudfrontDomain
+                    : "https://" + bucket + ".s3." + region + ".amazonaws.com";
+            String url = baseUrl + "/" + key;
             return ResponseEntity.ok(Map.of("success", true, "url", url));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("success", false, "message", "업로드 실패: " + e.getMessage()));

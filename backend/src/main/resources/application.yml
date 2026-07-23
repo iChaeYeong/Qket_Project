@@ -48,6 +48,8 @@ cloud:
       bucket: ${S3_BUCKET:qket-posters}
     region:
       static: ${AWS_REGION:ap-northeast-2}
+    cloudfront:
+      domain: ${CLOUDFRONT_DOMAIN:}
 
 # mybatis
 mybatis:
