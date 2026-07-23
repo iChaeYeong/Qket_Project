@@ -566,6 +566,11 @@ a {
 .seatMapWrap {
   flex: 1;
   min-width: 0;
+  overflow-x: auto;
+}
+
+.seatGridScroll {
+  min-width: max-content;
 }
 
 .seatStage {
@@ -626,9 +631,9 @@ a {
 }
 
 .seat {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
   border: none;
   cursor: pointer;
   font-size: 10px;

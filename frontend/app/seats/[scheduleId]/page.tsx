@@ -116,7 +116,7 @@ export default function SeatsPage() {
   // 행별로 좌석 그룹핑
   const byRow = ROWS.map(row => ({
     row,
-    seats: seats.filter(s => s.seatRow === row).sort((a, b) => Number(a.seatColumn) - Number(b.seatColumn)),
+    seats: seats.filter(s => s.seatRow === row).sort((a, b) => Number(a.seatColume) - Number(b.seatColume)),
   }));
 
   // 컬럼 번호 헤더용 (첫 번째 행 기준)
@@ -163,13 +163,14 @@ export default function SeatsPage() {
               </div>
 
               {/* 좌석 그리드 */}
+              <div className="seatGridScroll">
               <div className="seatGrid">
                 {/* 컬럼 번호 헤더 */}
                 {colCount > 0 && (
                   <div className="seatRow">
                     <span className="seatRowLabel" />
                     {Array.from({ length: colCount }, (_, i) => (
-                      <span key={i} style={{ width: 28, textAlign: "center", fontSize: 10, color: "var(--text-3)", flexShrink: 0 }}>
+                      <span key={i} style={{ width: 22, textAlign: "center", fontSize: 9, color: "var(--text-3)", flexShrink: 0 }}>
                         {i + 1}
                       </span>
                     ))}
@@ -184,11 +185,12 @@ export default function SeatsPage() {
                         className={seatClass(seat)}
                         onClick={() => handleSelect(seat)}
                         disabled={seat.status !== "AVAILABLE"}
-                        title={`${row}${seat.seatColumn} (${GRADE_LABEL[seat.grade]})`}
+                        title={`${row}${seat.seatColume} (${GRADE_LABEL[seat.grade]})`}
                       />
                     ))}
                   </div>
                 ))}
+              </div>
               </div>
             </div>
 
@@ -202,7 +204,7 @@ export default function SeatsPage() {
                 <>
                   <div className="seatPanelRow">
                     <span className="seatPanelLabel">좌석</span>
-                    <span className="seatPanelValue">{selected.seatRow}{selected.seatColumn}</span>
+                    <span className="seatPanelValue">{selected.seatRow}{selected.seatColume}</span>
                   </div>
                   <div className="seatPanelRow">
                     <span className="seatPanelLabel">등급</span>
