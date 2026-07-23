@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 type Props = {
   roundId: number;
@@ -18,6 +19,8 @@ type Props = {
 type ButtonState = "Before" | "pending" | "open" | "closed";
 
 export default function BookButton({ roundId, openTime, roundTime, title }: Props) {
+  const router = useRouter();
+  const { userSession } = useAuth();
 
   const [state, setState] = useState<ButtonState>(() => {
     const open = new Date(openTime).getTime();
@@ -73,14 +76,23 @@ export default function BookButton({ roundId, openTime, roundTime, title }: Prop
     );
   }
 
-// [BOOK-OPEN] 오픈 이후 — 대기열 페이지로 이동
+  // [BOOK-OPEN] 오픈 이후 — 로그인 확인 후 대기열 페이지로 이동
+  const handleBook = () => {
+    if (!userSession) {
+      alert("로그인 후 이용해주세요.");
+      router.push("/login");
+      return;
+    }
+    router.push(`/queue?scheduleId=${roundId}&title=${encodeURIComponent(title)}`);
+  };
+
   return (
-      <Link
-          href={`/queue?scheduleId=${roundId}&title=${encodeURIComponent(title)}`}
-          className="btnPrimary"
-          style={{ padding: "4px 12px", fontSize: 12 }}
-      >
-        예매하기
-      </Link>
+    <button
+      className="btnPrimary"
+      style={{ padding: "4px 12px", fontSize: 12 }}
+      onClick={handleBook}
+    >
+      예매하기
+    </button>
   );
 }
