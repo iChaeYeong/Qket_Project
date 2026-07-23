@@ -129,11 +129,11 @@ jobs:
 
       - name: Verify backend deployment
         run: |
-          echo "************************************************************* Deployment"
+          echo "************************************************************* start Deployment"
           kubectl get deployment qket-backend -n ${{ env.K8S_NAMESPACE }}
-          echo *************************************************************  Pods"
+          echo *************************************************************  start Pods"
           kubectl get pods -l app=qket-backend -n ${{ env.K8S_NAMESPACE }}
-          echo *************************************************************  Image"
+          echo *************************************************************  start Image"
           kubectl get pod -l app=qket-backend -n ${{ env.K8S_NAMESPACE }} \
             -o jsonpath='{.items[0].spec.containers[0].image}'
 
@@ -180,10 +180,10 @@ jobs:
 
       - name: Verify frontend deployment
         run: |
-          echo "=== Deployment ==="
+          echo "************************************************************* Deployment"
           kubectl get deployment qket-frontend -n ${{ env.K8S_NAMESPACE }}
-          echo "=== Pods ==="
+          echo "************************************************************* Pods"
           kubectl get pods -l app=qket-frontend -n ${{ env.K8S_NAMESPACE }}
-          echo "=== Image ==="
+          echo "************************************************************* Image"
           kubectl get pod -l app=qket-frontend -n ${{ env.K8S_NAMESPACE }} \
             -o jsonpath='{.items[0].spec.containers[0].image}'

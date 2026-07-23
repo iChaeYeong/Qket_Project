@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { getVenues, createPerformance, addRound, uploadPoster, type Venue } from "@/lib/api/admin";
+import { getVenues, createPerformance, uploadPoster, type Venue } from "@/lib/api/admin";
 
 type Round = { roundTime: string; openTime: string };
 type NewPerformance = { pTitle: string; venueId: number; posterUrl: string };
@@ -100,15 +100,13 @@ export default function AdminPerformancesPage() {
 
     setSaving(true);
     try {
-      const { performanceId } = await createPerformance(perfForm);
-      await Promise.all(
-        perfRounds.map(r =>
-          addRound(performanceId, {
-            roundTime: toMysqlDatetime(r.roundTime),
-            openTime: toMysqlDatetime(r.openTime),
-          })
-        )
-      );
+      const { performanceId } = await createPerformance({
+        ...perfForm,
+        rounds: perfRounds.map(r => ({
+          roundTime: toMysqlDatetime(r.roundTime),
+          openTime: toMysqlDatetime(r.openTime),
+        })),
+      });
       setMsg({ text: `공연이 등록되었습니다. (ID: ${performanceId})`, ok: true });
       setPerfForm({ pTitle: "", venueId: venues[0]?.venueId ?? 0, posterUrl: "" });
       setPerfRounds([{ ...EMPTY_ROUND }]);

@@ -76,6 +76,11 @@ jobs:
             --from-literal=REDIS_HOST=${{ secrets.PROD_REDIS_HOST }} \
             -n ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
+          kubectl create secret generic aws-secrets \
+            --from-literal=AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+            --from-literal=AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+            -n ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
       - name: 4. Apply Ingress
         run: kubectl apply -f k8s/prod/ingress_https_qket.yaml
 
@@ -175,10 +180,10 @@ jobs:
 
       - name: Verify frontend deployment
         run: |
-          echo "=== Deployment ==="
+          echo "************************************************************* Deployment "
           kubectl get deployment qket-frontend -n ${{ env.K8S_NAMESPACE }}
-          echo "=== Pods ==="
+          echo ""*************************************************************Pods"
           kubectl get pods -l app=qket-frontend -n ${{ env.K8S_NAMESPACE }}
-          echo "=== Image ==="
+          echo ""************************************************************* Image"
           kubectl get pod -l app=qket-frontend -n ${{ env.K8S_NAMESPACE }} \
             -o jsonpath='{.items[0].spec.containers[0].image}'

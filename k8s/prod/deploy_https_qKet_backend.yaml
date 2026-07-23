@@ -31,6 +31,8 @@ spec:
                 name: db-secrets # env_qKet.yaml의 DB Secret
             - secretRef:
                 name: redis-secrets # env_qKet.yaml의 Redis Secret
+            - secretRef:
+                name: aws-secrets
 
 ---
 apiVersion: v1

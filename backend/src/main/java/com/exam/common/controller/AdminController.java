@@ -93,15 +93,14 @@ public class AdminController {
         return ResponseEntity.ok(userMapper.findAll());
     }
 
-    // 사용자 상태/권한 수정 — 관리자(3)만
-    @PatchMapping("/users/{userId}")
-    public ResponseEntity<?> updateUser(@PathVariable String userId,
-                                        @RequestBody UserDTO body,
-                                        HttpSession session) {
+    // 사용자 상태/권한 일괄 수정 — 관리자(3)만
+    @PatchMapping("/users/batch")
+    public ResponseEntity<?> batchUpdateUsers(@RequestBody List<UserDTO> users, HttpSession session) {
         if (!isAdmin(getLoginUser(session)))
             return ResponseEntity.status(403).body(Map.of("success", false, "message", "관리자 권한이 필요합니다."));
-        body.setUserId(userId);
-        userMapper.updateUser(body);
+        for (UserDTO user : users) {
+            userMapper.updateUser(user);
+        }
         return ResponseEntity.ok(Map.of("success", true));
     }
 
@@ -113,16 +112,25 @@ public class AdminController {
         return ResponseEntity.ok(performanceMapper.findAllVenues());
     }
 
-    // 공연 추가 — 매니저(2) 이상
+    // 공연 추가 (회차 포함) — 매니저(2) 이상
+    @Transactional
     @PostMapping("/events")
     public ResponseEntity<?> createPerformance(@RequestBody PerformanceDTO dto, HttpSession session) {
         if (!isManagerOrAdmin(getLoginUser(session)))
             return ResponseEntity.status(403).body(Map.of("success", false, "message", "권한이 없습니다."));
         performanceMapper.insert(dto);
+        if (dto.getRounds() != null) {
+            for (RoundDTO round : dto.getRounds()) {
+                round.setPerformanceId(dto.getPerformanceId());
+                performanceMapper.insertRound(round);
+                performanceMapper.initReservationSlots(round.getRoundId(), dto.getPerformanceId());
+            }
+        }
         return ResponseEntity.ok(Map.of("success", true, "performanceId", dto.getPerformanceId()));
     }
 
-    // 공연 수정 (제목, 포스터) — 매니저(2) 이상
+    // 공연 수정 (제목, 포스터, 회차 포함) — 매니저(2) 이상
+    @Transactional
     @PutMapping("/events/{performanceId}")
     public ResponseEntity<?> updatePerformance(@PathVariable Long performanceId,
                                                @RequestBody PerformanceDTO dto,
@@ -131,6 +139,13 @@ public class AdminController {
             return ResponseEntity.status(403).body(Map.of("success", false, "message", "권한이 없습니다."));
         dto.setPerformanceId(performanceId);
         performanceMapper.updatePerformance(dto);
+        if (dto.getRounds() != null) {
+            for (RoundDTO round : dto.getRounds()) {
+                if (!performanceMapper.hasPassedRoundById(round.getRoundId())) {
+                    performanceMapper.updateRound(round);
+                }
+            }
+        }
         return ResponseEntity.ok(Map.of("success", true));
     }
 
