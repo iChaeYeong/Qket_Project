@@ -12,7 +12,7 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
 
-    alb.ingress.kubernetes.io/certificate-arn: REMOVED # ACM 인증서 ARN
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:727646470302:certificate/a9789e71-7453-43d9-b0db-ad2ac973f4c0 # ACM 인증서 ARN
 
     # 80으로 받은 포트 443으로 리다이렉션
     alb.ingress.kubernetes.io/ssl-redirect: "443"
@@ -58,7 +58,7 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
 
-    alb.ingress.kubernetes.io/certificate-arn: REMOVED # ACM 인증서 ARN
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:727646470302:certificate/a9789e71-7453-43d9-b0db-ad2ac973f4c0 # ACM 인증서 ARN
 
     # 80으로 받은 포트 443으로 리다이렉션
     alb.ingress.kubernetes.io/ssl-redirect: "443"
