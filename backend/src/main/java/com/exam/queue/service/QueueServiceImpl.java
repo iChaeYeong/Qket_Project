@@ -14,6 +14,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ *
+ 파일명: QueueServiceImpl.java
+ *
+ **/
+
 @Service
 public class QueueServiceImpl implements QueueService {
 
@@ -33,6 +39,13 @@ public class QueueServiceImpl implements QueueService {
         this.repository = repository;
     }
 
+
+    /***********************************
+     *  이름      :   join
+     *  기능      :   대기열 입장 ( 토큰 조회 및 생성 )
+     *  param    :   Long, String
+     *  return   :   QueueJoinResponse
+     ************************************/
     @Override
     public QueueJoinResponse join(
             Long scheduleId,
@@ -83,6 +96,12 @@ public class QueueServiceImpl implements QueueService {
         return new QueueJoinResponse(token);
     }
 
+    /***********************************
+     *  이름      :   getStatus
+     *  기능      :   대기열 토큰 상태 조회
+     *  param    :   String, String
+     *  return   :   QueueStatusResponse
+     ************************************/
     @Override
     public QueueStatusResponse getStatus(
             String queueToken,
@@ -133,6 +152,12 @@ public class QueueServiceImpl implements QueueService {
         );
     }
 
+    /***********************************
+     *  이름      :   leave
+     *  기능      :   대기 목록 및 활성 목록 제거 ( 관련 토큰 제거 )
+     *  param    :   String, String
+     *  return   :   void
+     ************************************/
     @Override
     public void leave(
             String queueToken,
@@ -162,6 +187,12 @@ public class QueueServiceImpl implements QueueService {
         removeToken(queueToken, tokenInfo);
     }
 
+    /***********************************
+     *  이름      :   canEnter
+     *  기능      :   예매 자격 조회 ( 만료된 활성 사용자 제거 )
+     *  param    :   Long, String, String
+     *  return   :   boolean
+     ************************************/
     @Override
     public boolean canEnter(
             Long scheduleId,
@@ -196,6 +227,12 @@ public class QueueServiceImpl implements QueueService {
         );
     }
 
+    /***********************************
+     *  이름      :   admitAvailableUsers
+     *  기능      :   동시 접속 인원 제한, 빈자리 발생 시 대기 순서대로 입장시키는 기능
+     *  param    :   Long
+     *  return   :   void
+     ************************************/
     private void admitAvailableUsers(Long scheduleId) {
         String lockOwner = UUID.randomUUID().toString();
 
@@ -290,7 +327,12 @@ public class QueueServiceImpl implements QueueService {
             );
         }
     }
-
+    /***********************************
+     *  이름      :   validateOwner
+     *  기능      :   대기열 토큰 소유자 검증 기능
+     *  param    :   QueueTokenInfo,String,
+     *  return   :   void
+     ************************************/
     private void validateOwner(
             QueueTokenInfo tokenInfo,
             String userId
@@ -302,7 +344,12 @@ public class QueueServiceImpl implements QueueService {
             );
         }
     }
-
+    /***********************************
+     *  이름      :   removeToken
+     *  기능      :   대기열 토큰 삭제 기능
+     *  param    :   QueueTokenInfo,String
+     *  return   :   void
+     ************************************/
     private void removeToken(
             String queueToken,
             QueueTokenInfo tokenInfo
@@ -315,7 +362,12 @@ public class QueueServiceImpl implements QueueService {
                 queueToken
         );
     }
-
+    /***********************************
+     *  이름      :   expired
+     *  기능      :   만료된 대기열 상태 응답 생성
+     *  param    :   String
+     *  return   :   QueueStatusResponse
+     ************************************/
     private QueueStatusResponse expired(String token) {
         return new QueueStatusResponse(
                 token,

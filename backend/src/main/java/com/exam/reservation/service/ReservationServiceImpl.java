@@ -10,7 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-
+/**
+ *
+ 파일명: ReservationServiceImpl.java
+ *
+ **/
 @Service
 public class ReservationServiceImpl implements ReservationService {
 
@@ -28,6 +32,12 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
+    /***********************************
+     *  이름      :   reserve
+     *  기능      :   공연 좌석 예매 (동시성 처리)
+     *  param    :  String,Long,Long,Long,String
+     *  return   :   Map<String, Object>
+     ************************************/
     public Map<String, Object> reserve(String userId, Long reservationId, Long roundId, Long seatId, String queueToken) {
         String lockKey = "lock:reservation:" + seatId;
 
@@ -68,7 +78,12 @@ public class ReservationServiceImpl implements ReservationService {
             redisTemplate.delete(lockKey);
         }
     }
-
+    /***********************************
+     *  이름      :  getMyReservations
+     *  기능      :  내 예매 내역 조회 기능
+     *  param    :  String
+     *  return   :  List<ReservationDTO>
+     ************************************/
     @Override
     public List<ReservationDTO> getMyReservations(String userId) {
         return reservationMapper.findByUserId(userId);
@@ -76,6 +91,12 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
+    /***********************************
+     *  이름      :  cancel
+     *  기능      :  예매 취소 기능
+     *  param    :  Long,String
+     *  return   :  Map<String, Object>
+     ************************************/
     public Map<String, Object> cancel(Long reservationId, String userId) {
         ReservationDTO reservation = reservationMapper.findById(reservationId);
         if (reservation == null || !reservation.getUserId().equals(userId)) {

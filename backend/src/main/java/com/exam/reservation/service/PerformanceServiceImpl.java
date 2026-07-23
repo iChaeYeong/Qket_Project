@@ -5,7 +5,11 @@ import com.exam.reservation.mapper.PerformanceMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+/**
+ *
+ 파일명: PerformanceServiceImpl.java
+ *
+ **/
 @Service
 public class PerformanceServiceImpl implements PerformanceService {
 
@@ -14,7 +18,12 @@ public class PerformanceServiceImpl implements PerformanceService {
     public PerformanceServiceImpl(PerformanceMapper performanceMapper) {
         this.performanceMapper = performanceMapper;
     }
-
+    /***********************************
+     *  이름      :   getAllPerformances
+     *  기능      :   공연 목록 조회
+     *  param    :
+     *  return   :   List<PerformanceDTO>
+     ************************************/
     @Override
     public List<PerformanceDTO> getAllPerformances() {
         return performanceMapper.findAll();
