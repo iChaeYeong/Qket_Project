@@ -30,6 +30,8 @@ spec:
                 name: db-secrets
             - secretRef:
                 name: redis-secrets
+            - secretRef:
+                name: aws-secrets
 
 ---
 apiVersion: v1

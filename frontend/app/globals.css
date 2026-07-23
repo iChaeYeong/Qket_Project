@@ -576,8 +576,15 @@ a {
   min-width: 0;
 }
 
+.seatVenue {
+  padding: 8px 12px 22px;
+  border: 1px solid var(--border);
+  border-radius: 16px 16px 90px 90px;
+  background: var(--surface2);
+}
+
 .seatSection {
-  margin-bottom: 20px;
+  margin-bottom: 26px;
 }
 
 .seatSection:last-child {
@@ -629,33 +636,46 @@ a {
 .seatGrid {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 14px;
 }
 
 .seatRow {
   display: flex;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+}
+
+.seatRowGroup {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.seatAisle {
+  width: 14px;
+  flex-shrink: 0;
 }
 
 .seatRowLabel {
-  width: 20px;
+  width: 18px;
   text-align: center;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
 .seat {
-  width: 22px;
-  height: 22px;
-  border-radius: 3px;
+  width: 13px;
+  height: 13px;
+  border-radius: 2px;
   border: none;
   cursor: pointer;
-  font-size: 10px;
+  font-size: 0;
   font-family: inherit;
   font-weight: 600;
+  /* 곡선 오프셋은 JS 에서 --seat-y 로 전달, hover/선택 시 스케일과 함께 적용 */
+  transform: translateY(var(--seat-y, 0px));
   transition: transform 0.1s, opacity 0.1s;
   display: flex;
   align-items: center;
@@ -668,12 +688,12 @@ a {
 .seatReserved      { background: var(--border);  color: var(--text-3);    cursor: not-allowed; }
 .seatLocked        { background: var(--warning-bg); color: var(--warning); cursor: not-allowed; }
 
-.seat:hover:not(:disabled) { transform: scale(1.15); opacity: 0.9; }
+.seat:hover:not(:disabled) { transform: translateY(var(--seat-y, 0px)) scale(1.5); opacity: 0.9; }
 
 .seatSelected {
   outline: 2px solid #ffffff;
   outline-offset: 1px;
-  transform: scale(1.1);
+  transform: translateY(var(--seat-y, 0px)) scale(1.5);
 }
 
 /* ── SEAT DETAIL PANEL ── */
