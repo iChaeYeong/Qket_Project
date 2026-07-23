@@ -34,6 +34,9 @@ public class AdminController {
     @Value("${cloud.aws.region.static:ap-northeast-2}")
     private String region;
 
+    @Value("${cloud.aws.cloudfront.domain:}")
+    private String cloudfrontDomain;
+
     public AdminController(UserMapper userMapper, PerformanceMapper performanceMapper, S3Client s3Client) {
         this.userMapper = userMapper;
         this.performanceMapper = performanceMapper;
@@ -66,7 +69,10 @@ public class AdminController {
                             .build(),
                     software.amazon.awssdk.core.sync.RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
-            String url = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
+            String baseUrl = (cloudfrontDomain != null && !cloudfrontDomain.isBlank())
+                    ? "https://" + cloudfrontDomain
+                    : "https://" + bucket + ".s3." + region + ".amazonaws.com";
+            String url = baseUrl + "/" + key;
             return ResponseEntity.ok(Map.of("success", true, "url", url));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("success", false, "message", "업로드 실패: " + e.getMessage()));
@@ -117,14 +123,6 @@ public class AdminController {
         return ResponseEntity.ok(userMapper.findAll());
     }
 
-    /***********************************
-     *  URL      :   "/users/{userId}"
-     *  이름      :   사용자 상태/권한 수정
-     *  기능      :   사용자 상태/권한 수정
-     *  method   :   Patch
-     *  param    :   String, UserDTO, HttpSession
-     *  return   :   ResponseEntity<?>
-     ************************************/
     // 사용자 상태/권한 수정 — 관리자(3)만
     @PatchMapping("/users/{userId}")
     public ResponseEntity<?> updateUser(@PathVariable String userId,
@@ -134,6 +132,17 @@ public class AdminController {
             return ResponseEntity.status(403).body(Map.of("success", false, "message", "관리자 권한이 필요합니다."));
         body.setUserId(userId);
         userMapper.updateUser(body);
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    // 사용자 상태/권한 일괄 수정 — 관리자(3)만
+    @PatchMapping("/users/batch")
+    public ResponseEntity<?> batchUpdateUsers(@RequestBody List<UserDTO> users, HttpSession session) {
+        if (!isAdmin(getLoginUser(session)))
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", "관리자 권한이 필요합니다."));
+        for (UserDTO user : users) {
+            userMapper.updateUser(user);
+        }
         return ResponseEntity.ok(Map.of("success", true));
     }
 
@@ -153,32 +162,25 @@ public class AdminController {
         return ResponseEntity.ok(performanceMapper.findAllVenues());
     }
 
-    /***********************************
-     *  URL      :   "/events"
-     *  이름      :   공연 추가
-     *  기능      :   공연 추가하기
-     *  method   :   Get
-     *  param    :   PerformanceDTO, HttpSession
-     *  return   :   ResponseEntity<?>
-     ************************************/
-    // 공연 추가 — 매니저(2) 이상
+    // 공연 추가 (회차 포함) — 매니저(2) 이상
+    @Transactional
     @PostMapping("/events")
     public ResponseEntity<?> createPerformance(@RequestBody PerformanceDTO dto, HttpSession session) {
         if (!isManagerOrAdmin(getLoginUser(session)))
             return ResponseEntity.status(403).body(Map.of("success", false, "message", "권한이 없습니다."));
         performanceMapper.insert(dto);
+        if (dto.getRounds() != null) {
+            for (RoundDTO round : dto.getRounds()) {
+                round.setPerformanceId(dto.getPerformanceId());
+                performanceMapper.insertRound(round);
+                performanceMapper.initReservationSlots(round.getRoundId(), dto.getPerformanceId());
+            }
+        }
         return ResponseEntity.ok(Map.of("success", true, "performanceId", dto.getPerformanceId()));
     }
 
-    /***********************************
-     *  URL      :   "/events/{performanceId}"
-     *  이름      :   공연 수정 (제목, 포스터)
-     *  기능      :   공연 수정하기 (제목, 포스터)
-     *  method   :   Put
-     *  param    :   Long, PerformanceDTO, HttpSession
-     *  return   :   ResponseEntity<?>
-     ************************************/
-    // 공연 수정 (제목, 포스터) — 매니저(2) 이상
+    // 공연 수정 (제목, 포스터, 회차 포함) — 매니저(2) 이상
+    @Transactional
     @PutMapping("/events/{performanceId}")
     public ResponseEntity<?> updatePerformance(@PathVariable Long performanceId,
                                                @RequestBody PerformanceDTO dto,
@@ -187,6 +189,13 @@ public class AdminController {
             return ResponseEntity.status(403).body(Map.of("success", false, "message", "권한이 없습니다."));
         dto.setPerformanceId(performanceId);
         performanceMapper.updatePerformance(dto);
+        if (dto.getRounds() != null) {
+            for (RoundDTO round : dto.getRounds()) {
+                if (!performanceMapper.hasPassedRoundById(round.getRoundId())) {
+                    performanceMapper.updateRound(round);
+                }
+            }
+        }
         return ResponseEntity.ok(Map.of("success", true));
     }
 

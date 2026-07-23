@@ -6,6 +6,7 @@
 
     <resultMap id="performanceMap" type="PerformanceDTO">
         <id property="performanceId" column="performance_id"/>
+        <result property="venueId" column="venue_id"/>
         <result property="pTitle" column="p_title"/>
         <result property="pLocation" column="venue_name"/>
         <result property="posterUrl" column="poster_url"/>
@@ -41,6 +42,7 @@
 
     <select id="findAll" resultMap="performanceMap">
         SELECT  A.performance_id,
+                A.venue_id,
                 A.p_title,
                 V.venue_name,
                 A.poster_url,
@@ -54,5 +56,58 @@
         LEFT OUTER JOIN PERFORMANCE_ROUND B ON A.performance_id = B.performance_id
         ORDER BY A.created_per DESC
     </select>
+
+    <select id="hasPassedRound" parameterType="Long" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM PERFORMANCE_ROUND
+        WHERE performance_id = #{performanceId} AND open_time &lt;= NOW()
+    </select>
+
+    <select id="hasPassedRoundById" parameterType="Long" resultType="boolean">
+        SELECT COUNT(*) > 0 FROM PERFORMANCE_ROUND
+        WHERE round_id = #{roundId} AND open_time &lt;= NOW()
+    </select>
+
+    <update id="updatePerformance" parameterType="PerformanceDTO">
+        UPDATE PERFORMANCES
+        <set>
+            <if test="pTitle != null">p_title = #{pTitle},</if>
+            <if test="posterUrl != null">poster_url = #{posterUrl},</if>
+        </set>
+        WHERE performance_id = #{performanceId}
+    </update>
+
+    <delete id="deleteReservationHistoryByPerformanceId">
+        DELETE FROM RESERVATION_HISTORY WHERE performance_id = #{performanceId}
+    </delete>
+
+    <delete id="deleteReservationsByPerformanceId">
+        DELETE FROM RESERVATIONS WHERE performance_id = #{performanceId}
+    </delete>
+
+    <delete id="deleteRoundsByPerformanceId">
+        DELETE FROM PERFORMANCE_ROUND WHERE performance_id = #{performanceId}
+    </delete>
+
+    <delete id="deletePerformance">
+        DELETE FROM PERFORMANCES WHERE performance_id = #{performanceId}
+    </delete>
+
+    <delete id="deleteReservationHistoryByRoundId">
+        DELETE FROM RESERVATION_HISTORY WHERE round_id = #{roundId}
+    </delete>
+
+    <delete id="deleteReservationsByRoundId">
+        DELETE FROM RESERVATIONS WHERE round_id = #{roundId}
+    </delete>
+
+    <delete id="deleteRound">
+        DELETE FROM PERFORMANCE_ROUND WHERE round_id = #{roundId}
+    </delete>
+
+    <update id="updateRound" parameterType="RoundDTO">
+        UPDATE PERFORMANCE_ROUND
+        SET round_time = #{roundTime}, open_time = #{openTime}
+        WHERE round_id = #{roundId}
+    </update>
 
 </mapper>

@@ -1109,6 +1109,7 @@ a {
 
 .adminPerfVenue { font-size: 11px; color: var(--text-2); margin-bottom: 2px; }
 .adminPerfRounds { font-size: 11px; color: var(--text-3); }
+.adminPerfRoundDetail { display: flex; flex-direction: column; gap: 1px; margin-top: 3px; padding: 4px 6px; background: var(--surface2); border-radius: 4px; font-size: 10px; color: var(--text-3); }
 
 .adminPerfActions {
   display: flex;
