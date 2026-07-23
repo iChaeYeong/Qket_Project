@@ -36,18 +36,31 @@ export default function SeatsPage() {
   // UI 상태
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // 컴포넌트 마운트 시 좌석 목록 불러오기
-  // lib/api/seats.ts 의 getSeats(scheduleId) 호출 → GET /api/seats/round/{scheduleId}
-  // 응답 배열을 setSeats 에 넣기
-  // 실패 시 setSeats([]) 또는 에러 표시
   useEffect(() => {
     getSeats(Number(scheduleId))
       .then(setSeats)
       .catch(() => setSeats([]))
       .finally(() => setLoading(false));
+  }, [scheduleId]);
+
+  // 3초마다 좌석 상태 폴링 (다른 사용자의 예매 반영)
+  useEffect(() => {
+    const id = setInterval(() => {
+      getSeats(Number(scheduleId))
+        .then(fresh => {
+          setSeats(fresh);
+          // 현재 선택 좌석이 폴링 결과에서 더 이상 AVAILABLE 아니면 선택 해제
+          setSelected(prev => {
+            if (!prev) return null;
+            const updated = fresh.find(s => s.seatId === prev.seatId);
+            return updated?.status === "AVAILABLE" ? prev : null;
+          });
+        })
+        .catch(() => { });
+    }, 3000);
+    return () => clearInterval(id);
   }, [scheduleId]);
 
 
@@ -56,10 +69,7 @@ export default function SeatsPage() {
   // 이미 선택된 좌석 다시 클릭 시 선택 해제
 
   const handleSelect = (seat: Seat) => {
-    if (seat.status !== "AVAILABLE") {
-      alert("이미 선택된 좌석입니다.")
-      return;
-    }
+    if (seat.status !== "AVAILABLE") return;
     setSelected(prev => prev?.seatId === seat.seatId ? null : seat);
   };
 
@@ -85,14 +95,14 @@ export default function SeatsPage() {
         // 마이페이지에서 뒤로가기를 눌러도 예매 끝난 좌석 화면(스냅샷)으로 안 돌아감
         setTimeout(() => router.replace("/mypage"), 2000);
       } else {
-        setError(result.message ?? "예매에 실패했습니다.");
+        alert(result.message ?? "예매에 실패했습니다.");
         setSelected(null);
-        getSeats(Number(scheduleId)).then(setSeats).catch(() => {});
+        getSeats(Number(scheduleId)).then(setSeats).catch(() => { });
       }
     } catch (e: any) {
-      setError(e?.message ?? "서버에 연결할 수 없습니다.");
+      alert(e?.message ?? "서버에 연결할 수 없습니다.");
       setSelected(null);
-      getSeats(Number(scheduleId)).then(setSeats).catch(() => {});
+      getSeats(Number(scheduleId)).then(setSeats).catch(() => { });
     } finally {
       setBooking(false);
     }
@@ -218,8 +228,8 @@ export default function SeatsPage() {
                               if (protoCount === 0) return null;
                               const blockClass =
                                 pos === "left" ? "seatBlock seatBlockLeft"
-                                : pos === "right" ? "seatBlock seatBlockRight"
-                                : "seatBlock";
+                                  : pos === "right" ? "seatBlock seatBlockRight"
+                                    : "seatBlock";
                               return (
                                 <div key={pos} className={blockClass} style={{ flexGrow: protoCount }}>
                                   {section.rows.map(({ row, seats: rowSeats }) => {
@@ -284,7 +294,6 @@ export default function SeatsPage() {
                     <p className="successMsg">예매 완료! 마이페이지로 이동합니다.</p>
                   ) : (
                     <>
-                      {error && <p className="errorMsg">{error}</p>}
                       <button
                         className="btnPrimary"
                         style={{ width: "100%" }}

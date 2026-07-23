@@ -205,18 +205,20 @@ export default function AdminPerformancesPage() {
                 {perf.posterUrl
                   ? <img src={perf.posterUrl} alt={perf.pTitle} />
                   : <div className="adminPerfPosterEmpty" />}
-                {locked && <span className="adminPerfLock">🔒</span>}
               </div>
               <div className="adminPerfInfo">
                 <p className="adminPerfTitle">{perf.pTitle}</p>
                 <p className="adminPerfVenue">{perf.pLocation}</p>
                 <p className="adminPerfRounds">{perf.rounds?.length ?? 0}회차</p>
-                {(perf.rounds ?? []).map((r) => (
-                  <div key={r.roundId} className="adminPerfRoundDetail">
-                    <span>공연 {toInputDatetime(r.roundTime).replace("T", " ")}</span>
-                    <span>예매 {toInputDatetime(r.openTime).replace("T", " ")}</span>
-                  </div>
-                ))}
+                {(perf.rounds ?? []).map((r) => {
+                  const roundLocked = new Date(r.openTime) <= new Date();
+                  return (
+                    <div key={r.roundId} className="adminPerfRoundDetail">
+                      <span>공연 {toInputDatetime(r.roundTime).replace("T", " ")}</span>
+                      <span>예매 {toInputDatetime(r.openTime).replace("T", " ")} {roundLocked && "🔒"}</span>
+                    </div>
+                  );
+                })}
               </div>
               <div className="adminPerfActions">
                 <button className="btnSecondary" onClick={() => openEdit(perf)}>수정</button>
