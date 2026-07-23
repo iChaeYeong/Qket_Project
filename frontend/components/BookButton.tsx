@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { Console } from "console";
 
 type Props = {
   roundId: number;
@@ -30,6 +31,7 @@ export default function BookButton({ roundId, openTime, roundTime, title }: Prop
 
     const check = () => {
       const now = Date.now();
+      console.log("[BookButton]", { openTime, parsedOpen: new Date(open).toLocaleString("ko-KR"), now: new Date(now).toLocaleString("ko-KR"), diffMin: ((open - now) / 60000).toFixed(1) });
       if (now >= round) {
         setState("closed");
       } else if (now >= open) {
@@ -69,6 +71,8 @@ export default function BookButton({ roundId, openTime, roundTime, title }: Prop
           onClick={() => {
             const now = new Date().toLocaleString("ko-KR");
             alert(`예매 오픈 전입니다.\n현재 시각: ${now}\n오픈 시각: ${new Date(openTime).toLocaleString("ko-KR")}`);
+            console.log(`예매 오픈 전입니다.\n현재 시각: ${now}\n오픈 시각: ${new Date(openTime).toLocaleString("ko-KR")}`);
+
           }}
         >
           예매하기
