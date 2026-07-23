@@ -28,9 +28,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    getMe()
-      .then(user => { if (user) setUserSession(user); })
-      .finally(() => setIsLoading(false));
+    // 로그인 상태 확인 (초기 마운트 + 탭 재포커스 시)
+    // 세션이 서버에서 만료/삭제돼도 네브바가 계속 로그인 상태로 남아있던 문제 방지
+    const check = () => {
+      getMe()
+        .then(user => setUserSession(user))
+        .finally(() => setIsLoading(false));
+    };
+
+    check();
+    window.addEventListener("focus", check);
+    return () => window.removeEventListener("focus", check);
   }, []);
 
 
