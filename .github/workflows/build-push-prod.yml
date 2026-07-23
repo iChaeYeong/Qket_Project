@@ -82,6 +82,9 @@ jobs:
       - name: 5. Apply NetworkPolicy
         run: kubectl apply -f k8s/prod/networkpolicy_qKet.yaml
 
+      - name: 6. Apply ServiceMonitor
+        run: kubectl apply -f k8s/prod/servicemonitor_qket_backend.yaml  
+
   # 백엔드 빌드/배포 - backend/* 변경 시에만 실행
   build-backend:
     needs: [changes, apply-manifests]

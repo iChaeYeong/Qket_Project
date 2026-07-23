@@ -38,10 +38,16 @@ kind: Service
 metadata:
   name: qket-backend-service
   namespace: qket-prod
+  labels:
+    app: qket-backend
+
 spec:
   type: ClusterIP
+
   selector:
     app: qket-backend
+
   ports:
-    - port: 80
+    - name: http
+      port: 80
       targetPort: 8080
