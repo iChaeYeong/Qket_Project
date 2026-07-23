@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
@@ -57,7 +56,7 @@ public class AdminController {
                             .key(key)
                             .contentType(file.getContentType())
                             .build(),
-                    RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+                    software.amazon.awssdk.core.sync.RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
             String url = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
             return ResponseEntity.ok(Map.of("success", true, "url", url));
