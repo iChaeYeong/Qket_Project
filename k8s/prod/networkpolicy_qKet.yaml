@@ -15,9 +15,14 @@ spec:
   policyTypes:
     - Ingress
   ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              name: qket-prod # 동일 namespace 안에서만 트래픽 허용
-      ports:
-        - port: 8080
+  - from:
+      - namespaceSelector:
+          matchLabels:
+            name: qket-prod
+
+      - namespaceSelector:
+          matchLabels:
+            name: monitoring
+
+    ports:
+      - port: 8080
