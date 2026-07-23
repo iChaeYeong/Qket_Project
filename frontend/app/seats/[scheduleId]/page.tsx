@@ -81,7 +81,9 @@ export default function SeatsPage() {
       const result = await createReservation(selected.reservationId, Number(scheduleId), selected.seatId, queueToken);
       if (result.success) {
         setSuccess(true);
-        setTimeout(() => router.push("/mypage"), 2000);
+        // push 대신 replace: 좌석 페이지를 히스토리에서 교체해야
+        // 마이페이지에서 뒤로가기를 눌러도 예매 끝난 좌석 화면(스냅샷)으로 안 돌아감
+        setTimeout(() => router.replace("/mypage"), 2000);
       } else {
         setError(result.message ?? "예매에 실패했습니다.");
         setSelected(null);
