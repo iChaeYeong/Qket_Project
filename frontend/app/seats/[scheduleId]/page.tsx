@@ -7,7 +7,7 @@
 //     (Server Component → props 로 seats 전달 → Client Component 에서 selection 처리)
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import type { Seat } from "@/lib/data/types";
 import { getSeats } from "@/lib/api/seats"
@@ -19,9 +19,6 @@ const GRADE_LABEL: Record<string, string> = { VIP: "VIP석", R: "R석", S: "S석
 
 // 등급별 가격 (백엔드에서 받아올 수도 있음)
 const GRADE_PRICE: Record<string, string> = { VIP: "220,000원", R: "154,000원", S: "99,000원" };
-
-// 한 줄에 표시할 최대 좌석 수 (넘어가면 다음 줄로 줄바꿈 — 가로 스크롤 없이 한눈에 보이게 하기 위함)
-const SEATS_PER_LINE = 25;
 
 export default function SeatsPage() {
   //동적라우팅 값 가져오기
@@ -117,9 +114,10 @@ export default function SeatsPage() {
   // → 예전엔 ROWS 가 A~H 로 고정돼 있어서 그 뒤 행(예: S석 구간)이 화면에 아예 안 그려지는 버그가 있었음
   const ROWS = Array.from(new Set(seats.map(s => s.seatRow))).sort();
 
-  // 행별로 좌석 그룹핑 (열 번호 순 정렬)
-  const byRow = ROWS.map(row => ({
+  // 행별로 좌석 그룹핑 (열 번호 순 정렬) + 무대로부터의 순서(rowIndex) 기록 — 곡선/폭 계산에 사용
+  const byRow = ROWS.map((row, rowIndex) => ({
     row,
+    rowIndex,
     grade: seats.find(s => s.seatRow === row)?.grade ?? "S",
     seats: seats.filter(s => s.seatRow === row).sort((a, b) => Number(a.seatColume) - Number(b.seatColume)),
   }));
@@ -135,13 +133,16 @@ export default function SeatsPage() {
     }
   });
 
-  // 한 행이 SEATS_PER_LINE 보다 길면 여러 줄로 나눠 렌더링 (가로 스크롤 없이 한눈에 보이도록)
-  const chunkSeats = (rowSeats: Seat[]) => {
-    const chunks: Seat[][] = [];
-    for (let i = 0; i < rowSeats.length; i += SEATS_PER_LINE) {
-      chunks.push(rowSeats.slice(i, i + SEATS_PER_LINE));
-    }
-    return chunks.length > 0 ? chunks : [[]];
+  // 실제 공연장처럼 각 행이 무대 쪽으로 살짝 휘어진 부채꼴(곡선) 모양이 되도록
+  // 좌석마다 중심에서 멀어질수록 무대(위쪽)에서 조금씩 멀어지는 세로 오프셋을 계산
+  const buildCurvedSeats = (rowSeats: Seat[], rowIndex: number) => {
+    const n = rowSeats.length;
+    const amplitude = Math.min(16, 3 + rowIndex * 0.8); // 뒤쪽 행일수록 곡률을 크게 (행 간격을 넘지 않도록 상한)
+    return rowSeats.map((seat, i) => {
+      const t = n > 1 ? (i - (n - 1) / 2) / ((n - 1) / 2) : 0; // -1(왼쪽 끝) ~ 1(오른쪽 끝), 0(중앙)
+      const offsetY = Math.round(amplitude * t * t);
+      return { seat, offsetY };
+    });
   };
 
   return (
@@ -180,57 +181,61 @@ export default function SeatsPage() {
                 </div>
               </div>
 
-              {/* 좌석 그리드 — 실제 공연장처럼 등급별 구역이 무대 앞쪽은 좁고 뒤로 갈수록 넓어지는 부채꼴 느낌으로 배치 */}
-              <div className="seatGrid">
-                {sections.map((section, si) => {
-                  // 무대와 가까운 앞 구역(보통 VIP)일수록 좌우 여백을 크게 줘서 폭이 좁아 보이게, 뒤로 갈수록 여백을 줄여 넓어지게
-                  const indent = Math.max(0, (sections.length - 1 - si) * 36);
-                  return (
-                    <div key={si} className="seatSection" style={{ paddingLeft: indent, paddingRight: indent }}>
-                      <div className="seatSectionHeader">
-                        <span className={`badge badge${section.grade === "VIP" ? "Vip" : section.grade}`}>
-                          {GRADE_LABEL[section.grade] ?? section.grade}
-                        </span>
-                      </div>
-                      {section.rows.map(({ row, seats: rowSeats }) =>
-                        chunkSeats(rowSeats).map((chunk, ci) => {
-                          // 좌/우 블록 사이에 통로(가운데 여백)를 둬서 실제 좌석 배치도 같은 느낌을 줌
-                          const half = Math.ceil(chunk.length / 2);
-                          const left = chunk.slice(0, half);
-                          const right = chunk.slice(half);
+              {/* 좌석 그리드 — 무대에서 멀어질수록 행이 넓어지고, 각 행은 가운데가 무대 쪽으로 볼록한 부채꼴 곡선으로 배치 */}
+              <div className="seatVenue">
+                <div className="seatGrid">
+                  {sections.map((section, si) => {
+                    // 무대와 가까운 앞 구역(보통 VIP)일수록 좌우 여백을 크게 줘서 폭이 좁아 보이게, 뒤로 갈수록 여백을 줄여 넓어지게
+                    const sectionIndent = Math.max(0, (sections.length - 1 - si) * 20);
+                    return (
+                      <div key={si} className="seatSection" style={{ paddingLeft: sectionIndent, paddingRight: sectionIndent }}>
+                        <div className="seatSectionHeader">
+                          <span className={`badge badge${section.grade === "VIP" ? "Vip" : section.grade}`}>
+                            {GRADE_LABEL[section.grade] ?? section.grade}
+                          </span>
+                        </div>
+                        {section.rows.map(({ row, rowIndex, seats: rowSeats }) => {
+                          const withOffset = buildCurvedSeats(rowSeats, rowIndex);
+                          const half = Math.ceil(withOffset.length / 2);
+                          const left = withOffset.slice(0, half);
+                          const right = withOffset.slice(half);
+                          // 뒤쪽 행일수록 폭을 좁혀줘서(음수 여백 대신 안쪽 정렬) 부채꼴이 자연스럽게 넓어지는 느낌을 강조
+                          const rowIndent = Math.max(0, (ROWS.length - 1 - rowIndex) * 2);
                           return (
-                            <div key={`${row}-${ci}`} className="seatRow">
-                              <span className="seatRowLabel">{ci === 0 ? row : ""}</span>
+                            <div key={row} className="seatRow" style={{ paddingLeft: rowIndent, paddingRight: rowIndent }}>
+                              <span className="seatRowLabel">{row}</span>
                               <div className="seatRowGroup">
-                                {left.map(seat => (
+                                {left.map(({ seat, offsetY }) => (
                                   <button
                                     key={seat.seatId}
                                     className={seatClass(seat)}
                                     onClick={() => handleSelect(seat)}
                                     disabled={seat.status !== "AVAILABLE"}
                                     title={`${row}${seat.seatColume} (${GRADE_LABEL[seat.grade]})`}
+                                    style={{ "--seat-y": `${offsetY}px` } as CSSProperties}
                                   />
                                 ))}
                               </div>
                               {right.length > 0 && <div className="seatAisle" />}
                               <div className="seatRowGroup">
-                                {right.map(seat => (
+                                {right.map(({ seat, offsetY }) => (
                                   <button
                                     key={seat.seatId}
                                     className={seatClass(seat)}
                                     onClick={() => handleSelect(seat)}
                                     disabled={seat.status !== "AVAILABLE"}
                                     title={`${row}${seat.seatColume} (${GRADE_LABEL[seat.grade]})`}
+                                    style={{ "--seat-y": `${offsetY}px` } as CSSProperties}
                                   />
                                 ))}
                               </div>
                             </div>
                           );
-                        })
-                      )}
-                    </div>
-                  );
-                })}
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
