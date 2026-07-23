@@ -9,6 +9,9 @@ metadata:
   name: app-alb-ingress
   namespace: qket-prod
   annotations:
+    alb.ingress.kubernetes.io/group.name: qket
+    alb.ingress.kubernetes.io/tags: Team=team5,Project=qket
+    alb.ingress.kubernetes.io/load-balancer-name: team5-qket-alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
 

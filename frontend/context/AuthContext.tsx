@@ -11,6 +11,7 @@ import { getMe } from "@/lib/api/auth";
 type AuthContextType = {
   userSession: UserDTO | null;
   setUserSession: (userSession: UserDTO | null) => void;
+  isLoading: boolean;
 };
 
 
@@ -24,16 +25,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 로그인 시 setUserSession(data.user) 
   // 로그아웃 시 setUserSession(null)
   const [userSession, setUserSession] = useState<UserDTO | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    getMe().then(user => {
-      if (user) setUserSession(user);
-    });
+    getMe()
+      .then(user => { if (user) setUserSession(user); })
+      .finally(() => setIsLoading(false));
   }, []);
 
 
   return (
-    <AuthContext.Provider value={{ userSession, setUserSession }}>
+    <AuthContext.Provider value={{ userSession, setUserSession, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

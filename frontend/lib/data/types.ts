@@ -2,7 +2,7 @@ export type UserDTO = {
   userId: string;
   userNm: string;
   userEmail?: string;
-
+  roleId?: number;
 };
 
 export type ApiResult = {
@@ -18,6 +18,7 @@ export type PerformanceRound = {
   roundId: number;
   performanceId: number;
   roundTime: string;
+  openTime: string;
   roundStatus: "OPEN" | "CLOSED" | "SOLDOUT";
 };
 
@@ -34,7 +35,7 @@ export type Seat = {
   seatId: number;
   roundId: number;
   seatRow: string;
-  seatColumn: string;
+  seatColume: string;
   grade: "VIP" | "R" | "S";
   status: "AVAILABLE" | "LOCKED" | "RESERVED";
 };

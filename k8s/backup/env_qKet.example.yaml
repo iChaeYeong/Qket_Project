@@ -17,9 +17,9 @@ metadata:
   name: db-secrets
   namespace: qket-prod
 stringData:
-  DB_HOST: ""       # RDS 엔드포인트 (application.yml: ${DB_HOST})
-  DB_USERNAME: ""   # DB 유저명    (application.yml: ${DB_USERNAME})
-  DB_PASSWORD: ""   # DB 비밀번호  (application.yml: ${DB_PASSWORD})
+  DB_HOST: "" # RDS 엔드포인트 (application.yml: ${DB_HOST})
+  DB_USERNAME: "" # DB 유저명    (application.yml: ${DB_USERNAME})
+  DB_PASSWORD: "" # DB 비밀번호  (application.yml: ${DB_PASSWORD})
 
 ---
 # Redis Secret
@@ -30,7 +30,7 @@ metadata:
   name: redis-secrets
   namespace: qket-prod
 stringData:
-  REDIS_HOST: ""    # ElastiCache 엔드포인트 (application.yml: ${REDIS_HOST})
+  REDIS_HOST: "" # ElastiCache 엔드포인트 (application.yml: ${REDIS_HOST})
 
 ---
 # =========================================================
@@ -42,7 +42,6 @@ metadata:
   name: app-config
   namespace: qket-prod
 data:
-  DB_PORT: "3306"               # application.yml: ${DB_PORT}
-  DB_NAME: "qket"               # application.yml: ${DB_NAME}
-  REDIS_PORT: "6379"            # application.yml: ${REDIS_PORT}
-  BACKEND_URL: "http://springboot-service"  # frontend Next.js → backend 내부 주소
+  DB_PORT: "" # application.yml: ${DB_PORT}
+  DB_NAME: "" # application.yml: ${DB_NAME}
+  REDIS_PORT: "" # application.yml: ${REDIS_PORT}
