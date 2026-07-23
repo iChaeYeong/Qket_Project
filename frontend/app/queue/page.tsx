@@ -60,7 +60,9 @@ function QueueContent() {
         stopPolling();
         redirectTimeoutRef.current = setTimeout(() => {
           if (cancelledRef.current) return;
-          router.push(`/seats/${scheduleId}?queueToken=${token}`);
+          // push 대신 replace: 대기열 페이지를 히스토리에서 교체해야
+          // 좌석 선택 화면에서 "뒤로가기"를 눌러도 대기열로 돌아가서 자동 재입장되는 문제가 안 생김
+          router.replace(`/seats/${scheduleId}?queueToken=${token}`);
         }, 1500);
       } else if (result.status === "EXPIRED") {
         stopPolling();
