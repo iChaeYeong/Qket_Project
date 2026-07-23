@@ -19,12 +19,13 @@ public class UserController {
         this.userService = userService;
     }
     /***********************************
-     *  URL      :  "/auth/logout"
-     *  이름      :   로그아웃
-     *  기능      :   로그아웃 시킨다
+     *  URL      :  "/auth/login"
+     *  이름      :   로그인
+     *  기능      :   로그인 시킨다
      *  method   :   POST
      *  param    :   UserDTO, HttpSession
      *  result   :   Map<String, Object>
+     *  Return   : ResponseEntity<Map<String, Object>>
      ************************************/
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody UserDTO userDTO, HttpSession session) {
@@ -52,6 +53,7 @@ public class UserController {
      *  URL      :  "/auth/logout"
      *  이름      :   로그아웃
      *  기능      :   로그아웃 시킨다
+     *  method   :   POST
      *  param    :   HttpSession
      *  result   :   Map<String, Object>
     ************************************/
