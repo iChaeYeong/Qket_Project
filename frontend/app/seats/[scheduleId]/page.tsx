@@ -84,9 +84,13 @@ export default function SeatsPage() {
         setTimeout(() => router.push("/mypage"), 2000);
       } else {
         setError(result.message ?? "예매에 실패했습니다.");
-      } //예매 성공 시 2초뒤 마이페이지로(예매조회)
+        setSelected(null);
+        getSeats(Number(scheduleId)).then(setSeats).catch(() => {});
+      }
     } catch (e: any) {
       setError(e?.message ?? "서버에 연결할 수 없습니다.");
+      setSelected(null);
+      getSeats(Number(scheduleId)).then(setSeats).catch(() => {});
     } finally {
       setBooking(false);
     }
