@@ -40,6 +40,14 @@ public class AdminController {
         this.s3Client = s3Client;
     }
 
+    /***********************************
+     *  URL      :   "/upload"
+     *  이름      :   포스터 이미지 S3 업로드
+     *  기능      :   포스터 이미지 S3 업로드
+     *  method   :   Post
+     *  param    :   MultipartFile, HttpSession
+     *  return   :   ResponseEntity<?>
+     ************************************/
     // 포스터 이미지 S3 업로드 — 매니저(2) 이상
     @PostMapping(value = "/upload", consumes = "multipart/form-data")
     public ResponseEntity<?> uploadPoster(@RequestParam("file") MultipartFile file, HttpSession session) {
@@ -77,6 +85,14 @@ public class AdminController {
         return user != null && (Long.valueOf(2L).equals(user.getRoleId()) || Long.valueOf(3L).equals(user.getRoleId()));
     }
 
+    /***********************************
+     *  URL      :   "/roles"
+     *  이름      :   역할 목록
+     *  기능      :   역할 목록보기
+     *  method   :   Get
+     *  param    :   HttpSession
+     *  return   :   ResponseEntity<?>
+     ************************************/
     // 역할 목록 — 관리자(3)만
     @GetMapping("/roles")
     public ResponseEntity<?> getRoles(HttpSession session) {
@@ -85,6 +101,14 @@ public class AdminController {
         return ResponseEntity.ok(userMapper.findAllRoles());
     }
 
+    /***********************************
+     *  URL      :   "/users"
+     *  이름      :   사용자 목록 조회
+     *  기능      :   사용자 목록 조회하기
+     *  method   :   Get
+     *  param    :   HttpSession
+     *  return   :   ResponseEntity<?>
+     ************************************/
     // 사용자 목록 조회 — 관리자(3)만
     @GetMapping("/users")
     public ResponseEntity<?> getUsers(HttpSession session) {
@@ -105,6 +129,25 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("success", true));
     }
 
+    // 사용자 상태/권한 일괄 수정 — 관리자(3)만
+    @PatchMapping("/users/batch")
+    public ResponseEntity<?> batchUpdateUsers(@RequestBody List<UserDTO> users, HttpSession session) {
+        if (!isAdmin(getLoginUser(session)))
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", "관리자 권한이 필요합니다."));
+        for (UserDTO user : users) {
+            userMapper.updateUser(user);
+        }
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    /***********************************
+     *  URL      :   "/venues"
+     *  이름      :   공연장 목록
+     *  기능      :   공연장 목록보기
+     *  method   :   Get
+     *  param    :   HttpSession
+     *  return   :   ResponseEntity<?>
+     ************************************/
     // 공연장 목록 — 매니저(2) 이상
     @GetMapping("/venues")
     public ResponseEntity<?> getVenues(HttpSession session) {
@@ -113,16 +156,25 @@ public class AdminController {
         return ResponseEntity.ok(performanceMapper.findAllVenues());
     }
 
-    // 공연 추가 — 매니저(2) 이상
+    // 공연 추가 (회차 포함) — 매니저(2) 이상
+    @Transactional
     @PostMapping("/events")
     public ResponseEntity<?> createPerformance(@RequestBody PerformanceDTO dto, HttpSession session) {
         if (!isManagerOrAdmin(getLoginUser(session)))
             return ResponseEntity.status(403).body(Map.of("success", false, "message", "권한이 없습니다."));
         performanceMapper.insert(dto);
+        if (dto.getRounds() != null) {
+            for (RoundDTO round : dto.getRounds()) {
+                round.setPerformanceId(dto.getPerformanceId());
+                performanceMapper.insertRound(round);
+                performanceMapper.initReservationSlots(round.getRoundId(), dto.getPerformanceId());
+            }
+        }
         return ResponseEntity.ok(Map.of("success", true, "performanceId", dto.getPerformanceId()));
     }
 
-    // 공연 수정 (제목, 포스터) — 매니저(2) 이상
+    // 공연 수정 (제목, 포스터, 회차 포함) — 매니저(2) 이상
+    @Transactional
     @PutMapping("/events/{performanceId}")
     public ResponseEntity<?> updatePerformance(@PathVariable Long performanceId,
                                                @RequestBody PerformanceDTO dto,
@@ -131,9 +183,24 @@ public class AdminController {
             return ResponseEntity.status(403).body(Map.of("success", false, "message", "권한이 없습니다."));
         dto.setPerformanceId(performanceId);
         performanceMapper.updatePerformance(dto);
+        if (dto.getRounds() != null) {
+            for (RoundDTO round : dto.getRounds()) {
+                if (!performanceMapper.hasPassedRoundById(round.getRoundId())) {
+                    performanceMapper.updateRound(round);
+                }
+            }
+        }
         return ResponseEntity.ok(Map.of("success", true));
     }
 
+    /***********************************
+     *  URL      :   "/events/{performanceId}"
+     *  이름      :   공연 삭제
+     *  기능      :   공연 삭제 — 오픈된 회차 있으면 거부
+     *  method   :   Delete
+     *  param    :   Long, HttpSession
+     *  return   :   ResponseEntity<?>
+     ************************************/
     // 공연 삭제 — 오픈된 회차 있으면 거부 — 매니저(2) 이상
     @Transactional
     @DeleteMapping("/events/{performanceId}")
@@ -149,6 +216,14 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("success", true));
     }
 
+    /***********************************
+     *  URL      :   "/events/{performanceId}/rounds/{roundId}"
+     *  이름      :   회차 수정
+     *  기능      :   회차 수정 — 오픈 시간 지나면 거부
+     *  method   :   Put
+     *  param    :   Long, Long, RoundDTO, HttpSession
+     *  return   :   ResponseEntity<?>
+     ************************************/
     // 회차 수정 — 오픈 시간 지나면 거부 — 매니저(2) 이상
     @PutMapping("/events/{performanceId}/rounds/{roundId}")
     public ResponseEntity<?> updateRound(@PathVariable Long performanceId,
@@ -164,6 +239,14 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("success", true));
     }
 
+    /***********************************
+     *  URL      :   "/events/{performanceId}/rounds/{roundId}"
+     *  이름      :   회차 삭제
+     *  기능      :   회차 삭제 — 오픈 시간 지나면 거부
+     *  method   :   Put
+     *  param    :   Long, Long, HttpSession
+     *  return   :   ResponseEntity<?>
+     ************************************/
     // 회차 삭제 — 오픈 시간 지나면 거부 — 매니저(2) 이상
     @Transactional
     @DeleteMapping("/events/{performanceId}/rounds/{roundId}")
@@ -180,6 +263,14 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("success", true));
     }
 
+    /***********************************
+     *  URL      :   "/events/{performanceId}/rounds"
+     *  이름      :   회차 추가
+     *  기능      :   회차 추가 + 예약 슬롯 초기화
+     *  method   :   Post
+     *  param    :   Long, RoundDTO, HttpSession
+     *  return   :   ResponseEntity<?>
+     ************************************/
     // 회차 추가 + 예약 슬롯 초기화 — 매니저(2) 이상
     @Transactional
     @PostMapping("/events/{performanceId}/rounds")

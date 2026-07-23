@@ -24,8 +24,8 @@ public class ReservationController {
      *  이름      :   reserve
      *  기능      :   예약
      *  method   :   POST
-     *  param    :   HttpSession
-     *  result   :   Map<String, Long>, HttpSession
+     *  param    :   Map<String, Object>, HttpSession
+     *  return   :   Map<String, Object>
      ************************************/
     @PostMapping
     public Map<String, Object> reserve(@RequestBody Map<String, Object> body, HttpSession session) {
@@ -50,8 +50,8 @@ public class ReservationController {
      *  이름      :   my
      *  기능      :   마이페이지 조회
      *  method   :   GET
-     *  param    :   Map<String, Object>
-     *  result   :   HttpSession
+     *  param    :   HttpSession
+     *  return   :   Map<String, Object>
      ************************************/
     @GetMapping("/my")
     public Map<String, Object> myReservations(HttpSession session) {
@@ -68,8 +68,8 @@ public class ReservationController {
      *  이름      :   cancel
      *  기능      :   예매 취소
      *  method   :   DELETE
-     *  param    :   Map<String, Object>
-     *  result   :   Long, HttpSession
+     *  param    :   Long, HttpSession
+     *  return   : Map<String, Object>
      ************************************/
     @DeleteMapping("/{reservationId}")
     public Map<String, Object> cancel(@PathVariable Long reservationId, HttpSession session) {

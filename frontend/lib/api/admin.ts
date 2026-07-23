@@ -30,7 +30,11 @@ export const updateUser = (userId: string, data: { roleId?: number; userStatus?:
 
 export const batchUpdateUsers = (
   changes: Record<string, { roleId?: number; userStatus?: string }>
-) => Promise.all(Object.entries(changes).map(([userId, data]) => updateUser(userId, data)));
+) =>
+  apiFetch<{ success: boolean }>("/admin/users/batch", {
+    method: "PATCH",
+    body: Object.entries(changes).map(([userId, data]) => ({ userId, ...data })) as unknown as object,
+  });
 
 export const getVenues = () => apiFetch<Venue[]>("/admin/venues");
 
@@ -38,6 +42,7 @@ export const createPerformance = (data: {
   pTitle: string;
   venueId: number;
   posterUrl?: string;
+  rounds: { roundTime: string; openTime: string }[];
 }) =>
   apiFetch<{ success: boolean; performanceId: number }>("/admin/events", {
     method: "POST",
@@ -55,7 +60,11 @@ export const addRound = (
 
 export const updatePerformance = (
   performanceId: number,
-  data: { pTitle?: string; posterUrl?: string }
+  data: {
+    pTitle?: string;
+    posterUrl?: string;
+    rounds?: { roundId: number; roundTime: string; openTime: string }[];
+  }
 ) =>
   apiFetch<{ success: boolean }>(`/admin/events/${performanceId}`, {
     method: "PUT",

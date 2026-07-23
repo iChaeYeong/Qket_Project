@@ -62,7 +62,7 @@ export default async function EventsPage() {
 
             <div className="eventInfo">
               <p className="eventTitle">{performance.pTitle}</p>
-              <p className="eventLocation">📍 {performance.pLocation}</p>
+              <p className="eventLocation">{performance.pLocation}</p>
 
               <div className="eventRounds">
                 {performance.rounds?.map((round) => (
