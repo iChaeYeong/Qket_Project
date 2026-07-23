@@ -9,11 +9,11 @@ metadata:
 
 data:
   # AWS RDS(MySQL) 엔드포인트
-  DB_HOST: REMOVED
+  DB_HOST: ""
   # MySQL 포트 번호
   DB_PORT: "REMOVED"
   # 사용할 데이터베이스 이름
-  DB_NAME: REMOVED
+  DB_NAME: ""
 
   # Kubernetes 내부 DNS를 통해 redis 서비스로 연결
   REDIS_HOST: redis
