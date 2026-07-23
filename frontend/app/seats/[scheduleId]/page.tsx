@@ -20,8 +20,8 @@ const GRADE_LABEL: Record<string, string> = { VIP: "VIP석", R: "R석", S: "S석
 // 등급별 가격 (백엔드에서 받아올 수도 있음)
 const GRADE_PRICE: Record<string, string> = { VIP: "220,000원", R: "154,000원", S: "99,000원" };
 
-// 좌석 행/열 구성 (백엔드 DB와 맞춰야 함)
-const ROWS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+// 한 줄에 표시할 최대 좌석 수 (넘어가면 다음 줄로 줄바꿈 — 가로 스크롤 없이 한눈에 보이게 하기 위함)
+const SEATS_PER_LINE = 25;
 
 export default function SeatsPage() {
   //동적라우팅 값 가져오기
@@ -113,14 +113,36 @@ export default function SeatsPage() {
     return `${base} seatAvailableS`;
   };
 
-  // 행별로 좌석 그룹핑
+  // 실제 응답 데이터에 존재하는 행(row)만 사용 (하드코딩 X)
+  // → 예전엔 ROWS 가 A~H 로 고정돼 있어서 그 뒤 행(예: S석 구간)이 화면에 아예 안 그려지는 버그가 있었음
+  const ROWS = Array.from(new Set(seats.map(s => s.seatRow))).sort();
+
+  // 행별로 좌석 그룹핑 (열 번호 순 정렬)
   const byRow = ROWS.map(row => ({
     row,
+    grade: seats.find(s => s.seatRow === row)?.grade ?? "S",
     seats: seats.filter(s => s.seatRow === row).sort((a, b) => Number(a.seatColume) - Number(b.seatColume)),
   }));
 
-  // 컬럼 번호 헤더용 (첫 번째 행 기준)
-  const colCount = byRow.find(r => r.seats.length > 0)?.seats.length ?? 0;
+  // 연속된 같은 등급의 행들을 하나의 섹션으로 묶기 (VIP / R / S 구역 구분 표시용)
+  const sections: { grade: string; rows: typeof byRow }[] = [];
+  byRow.forEach(entry => {
+    const last = sections[sections.length - 1];
+    if (last && last.grade === entry.grade) {
+      last.rows.push(entry);
+    } else {
+      sections.push({ grade: entry.grade, rows: [entry] });
+    }
+  });
+
+  // 한 행이 SEATS_PER_LINE 보다 길면 여러 줄로 나눠 렌더링 (가로 스크롤 없이 한눈에 보이도록)
+  const chunkSeats = (rowSeats: Seat[]) => {
+    const chunks: Seat[][] = [];
+    for (let i = 0; i < rowSeats.length; i += SEATS_PER_LINE) {
+      chunks.push(rowSeats.slice(i, i + SEATS_PER_LINE));
+    }
+    return chunks.length > 0 ? chunks : [[]];
+  };
 
   return (
     <>
@@ -156,41 +178,35 @@ export default function SeatsPage() {
                   <div className="seatLegendDot" style={{ background: "var(--border-strong)" }} />
                   <span>예매완료</span>
                 </div>
-                <div className="seatLegendItem">
-                  <div className="seatLegendDot" style={{ background: "var(--warning)" }} />
-                  <span>선택 중</span>
-                </div>
               </div>
 
-              {/* 좌석 그리드 */}
-              <div className="seatGridScroll">
+              {/* 좌석 그리드 — 등급(VIP/R/S) 구역별로 나눠서 표시, 한 행이 길면 줄바꿈 */}
               <div className="seatGrid">
-                {/* 컬럼 번호 헤더 */}
-                {colCount > 0 && (
-                  <div className="seatRow">
-                    <span className="seatRowLabel" />
-                    {Array.from({ length: colCount }, (_, i) => (
-                      <span key={i} style={{ width: 22, textAlign: "center", fontSize: 9, color: "var(--text-3)", flexShrink: 0 }}>
-                        {i + 1}
+                {sections.map((section, si) => (
+                  <div key={si} className="seatSection">
+                    <div className="seatSectionHeader">
+                      <span className={`badge badge${section.grade === "VIP" ? "Vip" : section.grade}`}>
+                        {GRADE_LABEL[section.grade] ?? section.grade}
                       </span>
-                    ))}
-                  </div>
-                )}
-                {byRow.map(({ row, seats: rowSeats }) => (
-                  <div key={row} className="seatRow">
-                    <span className="seatRowLabel">{row}</span>
-                    {rowSeats.map(seat => (
-                      <button
-                        key={seat.seatId}
-                        className={seatClass(seat)}
-                        onClick={() => handleSelect(seat)}
-                        disabled={seat.status !== "AVAILABLE"}
-                        title={`${row}${seat.seatColume} (${GRADE_LABEL[seat.grade]})`}
-                      />
-                    ))}
+                    </div>
+                    {section.rows.map(({ row, seats: rowSeats }) =>
+                      chunkSeats(rowSeats).map((chunk, ci) => (
+                        <div key={`${row}-${ci}`} className="seatRow">
+                          <span className="seatRowLabel">{ci === 0 ? row : ""}</span>
+                          {chunk.map(seat => (
+                            <button
+                              key={seat.seatId}
+                              className={seatClass(seat)}
+                              onClick={() => handleSelect(seat)}
+                              disabled={seat.status !== "AVAILABLE"}
+                              title={`${row}${seat.seatColume} (${GRADE_LABEL[seat.grade]})`}
+                            />
+                          ))}
+                        </div>
+                      ))
+                    )}
                   </div>
                 ))}
-              </div>
               </div>
             </div>
 
