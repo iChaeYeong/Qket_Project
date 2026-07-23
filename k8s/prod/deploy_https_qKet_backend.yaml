@@ -8,6 +8,11 @@ metadata:
   namespace: qket-prod
 spec:
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: qket-backend
@@ -24,6 +29,13 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /api/actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 6
           envFrom:
             - configMapRef:
                 name: app-config # env_qKet.yaml의 ConfigMap
