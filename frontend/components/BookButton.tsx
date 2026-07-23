@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Console } from "console";
 
 type Props = {
   roundId: number;
@@ -31,8 +30,7 @@ export default function BookButton({ roundId, openTime, roundTime, title }: Prop
 
     const check = () => {
       const now = Date.now();
-      console.log("[BookButton]", { openTime, parsedOpen: new Date(open).toLocaleString("ko-KR"), now: new Date(now).toLocaleString("ko-KR"), diffMin: ((open - now) / 60000).toFixed(1) });
-      if (now >= round) {
+if (now >= round) {
         setState("closed");
       } else if (now >= open) {
         setState("open");
