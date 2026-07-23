@@ -636,7 +636,7 @@ a {
 .seatGrid {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 6px;
 }
 
 .seatRow {
@@ -648,27 +648,22 @@ a {
 .seatRowGroup {
   display: flex;
   align-items: center;
-  gap: 2px;
-}
-
-.seatAisle {
-  width: 14px;
-  flex-shrink: 0;
+  gap: 3px;
 }
 
 .seatRowLabel {
-  width: 18px;
+  width: 20px;
   text-align: center;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
 .seat {
-  width: 13px;
-  height: 13px;
-  border-radius: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
   border: none;
   cursor: pointer;
   font-size: 0;
@@ -688,12 +683,12 @@ a {
 .seatReserved      { background: var(--border);  color: var(--text-3);    cursor: not-allowed; }
 .seatLocked        { background: var(--warning-bg); color: var(--warning); cursor: not-allowed; }
 
-.seat:hover:not(:disabled) { transform: translateY(var(--seat-y, 0px)) scale(1.5); opacity: 0.9; }
+.seat:hover:not(:disabled) { transform: translateY(var(--seat-y, 0px)) scale(1.15); opacity: 0.9; }
 
 .seatSelected {
   outline: 2px solid #ffffff;
   outline-offset: 1px;
-  transform: translateY(var(--seat-y, 0px)) scale(1.5);
+  transform: translateY(var(--seat-y, 0px)) scale(1.1);
 }
 
 /* ── SEAT DETAIL PANEL ── */
