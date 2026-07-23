@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { getVenues, createPerformance, addRound, type Venue } from "@/lib/api/admin";
+import { getVenues, createPerformance, addRound, uploadPoster, type Venue } from "@/lib/api/admin";
 
 type Round = { roundTime: string; openTime: string };
 type NewPerformance = { pTitle: string; venueId: number; posterUrl: string };
@@ -61,21 +61,10 @@ export default function AdminPerformancesPage() {
     setPreviewUrl(URL.createObjectURL(file));
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/admin/upload", {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.success) {
-        setPerfForm(f => ({ ...f, posterUrl: data.url }));
-      } else {
-        setMsg({ text: "이미지 업로드 실패: " + data.message, ok: false });
-      }
-    } catch {
-      setMsg({ text: "이미지 업로드에 실패했습니다.", ok: false });
+      const url = await uploadPoster(file);
+      setPerfForm(f => ({ ...f, posterUrl: url }));
+    } catch (err: any) {
+      setMsg({ text: err?.message ?? "이미지 업로드에 실패했습니다.", ok: false });
     } finally {
       setUploading(false);
     }
