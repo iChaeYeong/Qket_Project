@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: account-backend
-          image: 727646470302.dkr.ecr.ap-northeast-2.amazonaws.com/team5/ecr/REMOVED:backend-7.2
+          image: 727646470302.dkr.ecr.ap-northeast-2.amazonaws.com/team5/ecr/REMOVED:backend-7.3.2
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
