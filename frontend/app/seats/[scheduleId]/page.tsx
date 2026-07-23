@@ -180,33 +180,57 @@ export default function SeatsPage() {
                 </div>
               </div>
 
-              {/* 좌석 그리드 — 등급(VIP/R/S) 구역별로 나눠서 표시, 한 행이 길면 줄바꿈 */}
+              {/* 좌석 그리드 — 실제 공연장처럼 등급별 구역이 무대 앞쪽은 좁고 뒤로 갈수록 넓어지는 부채꼴 느낌으로 배치 */}
               <div className="seatGrid">
-                {sections.map((section, si) => (
-                  <div key={si} className="seatSection">
-                    <div className="seatSectionHeader">
-                      <span className={`badge badge${section.grade === "VIP" ? "Vip" : section.grade}`}>
-                        {GRADE_LABEL[section.grade] ?? section.grade}
-                      </span>
+                {sections.map((section, si) => {
+                  // 무대와 가까운 앞 구역(보통 VIP)일수록 좌우 여백을 크게 줘서 폭이 좁아 보이게, 뒤로 갈수록 여백을 줄여 넓어지게
+                  const indent = Math.max(0, (sections.length - 1 - si) * 36);
+                  return (
+                    <div key={si} className="seatSection" style={{ paddingLeft: indent, paddingRight: indent }}>
+                      <div className="seatSectionHeader">
+                        <span className={`badge badge${section.grade === "VIP" ? "Vip" : section.grade}`}>
+                          {GRADE_LABEL[section.grade] ?? section.grade}
+                        </span>
+                      </div>
+                      {section.rows.map(({ row, seats: rowSeats }) =>
+                        chunkSeats(rowSeats).map((chunk, ci) => {
+                          // 좌/우 블록 사이에 통로(가운데 여백)를 둬서 실제 좌석 배치도 같은 느낌을 줌
+                          const half = Math.ceil(chunk.length / 2);
+                          const left = chunk.slice(0, half);
+                          const right = chunk.slice(half);
+                          return (
+                            <div key={`${row}-${ci}`} className="seatRow">
+                              <span className="seatRowLabel">{ci === 0 ? row : ""}</span>
+                              <div className="seatRowGroup">
+                                {left.map(seat => (
+                                  <button
+                                    key={seat.seatId}
+                                    className={seatClass(seat)}
+                                    onClick={() => handleSelect(seat)}
+                                    disabled={seat.status !== "AVAILABLE"}
+                                    title={`${row}${seat.seatColume} (${GRADE_LABEL[seat.grade]})`}
+                                  />
+                                ))}
+                              </div>
+                              {right.length > 0 && <div className="seatAisle" />}
+                              <div className="seatRowGroup">
+                                {right.map(seat => (
+                                  <button
+                                    key={seat.seatId}
+                                    className={seatClass(seat)}
+                                    onClick={() => handleSelect(seat)}
+                                    disabled={seat.status !== "AVAILABLE"}
+                                    title={`${row}${seat.seatColume} (${GRADE_LABEL[seat.grade]})`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
-                    {section.rows.map(({ row, seats: rowSeats }) =>
-                      chunkSeats(rowSeats).map((chunk, ci) => (
-                        <div key={`${row}-${ci}`} className="seatRow">
-                          <span className="seatRowLabel">{ci === 0 ? row : ""}</span>
-                          {chunk.map(seat => (
-                            <button
-                              key={seat.seatId}
-                              className={seatClass(seat)}
-                              onClick={() => handleSelect(seat)}
-                              disabled={seat.status !== "AVAILABLE"}
-                              title={`${row}${seat.seatColume} (${GRADE_LABEL[seat.grade]})`}
-                            />
-                          ))}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
