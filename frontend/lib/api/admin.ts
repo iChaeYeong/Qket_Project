@@ -82,3 +82,18 @@ export const updateRound = (
     `/admin/events/${performanceId}/rounds/${roundId}`,
     { method: "PUT", body: data }
   );
+
+export const uploadPoster = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch("/api/admin/upload", {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data?.success) {
+    throw new Error(data?.message ?? "이미지 업로드에 실패했습니다.");
+  }
+  return data.url as string;
+};
