@@ -38,6 +38,9 @@ dependencies {
 	//헬스체크 "/actuator/health"
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+	// Prometheus 지표
+	implementation 'io.micrometer:micrometer-registry-prometheus'
+
 	// AWS S3
 	implementation platform('software.amazon.awssdk:bom:2.27.7')
 	implementation 'software.amazon.awssdk:s3'

@@ -136,6 +136,14 @@ a {
   padding: 36px 24px 80px;
 }
 
+/* 좌석 선택 페이지 전용 — 좌석이 많은 대형 공연장(예: 2000석 고척스카이돔)도
+   좌석이 좁아지지 않게 다른 페이지보다 폭을 넓게 씀 */
+.pageWrapWide {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+
 .pageWrapNarrow {
   max-width: 620px;
   margin: 0 auto;
@@ -577,14 +585,16 @@ a {
 }
 
 .seatVenue {
-  padding: 8px 12px 22px;
+  /* 양옆 블록 회전(transform)은 레이아웃 크기 계산에 반영되지 않으므로
+     기울어진 블록 모서리가 카드 밖으로 안 나가도록 패딩을 넉넉하게 줌 */
+  padding: 20px 28px 32px;
   border: 1px solid var(--border);
-  border-radius: 16px 16px 90px 90px;
+  border-radius: 16px;
   background: var(--surface2);
 }
 
 .seatSection {
-  margin-bottom: 26px;
+  margin-bottom: 30px;
 }
 
 .seatSection:last-child {
@@ -639,43 +649,73 @@ a {
   gap: 14px;
 }
 
-.seatRow {
+/* ── 블록 분할 배치 ──
+   각 등급 구역을 [행라벨 | 좌측블록 | 중앙블록 | 우측블록] 으로 구성.
+   양옆 블록은 무대 쪽으로 살짝 회전시켜 실제 공연장처럼 무대를 감싸는 부채꼴 느낌을 냄.
+   좌석을 개별로 이동시키지 않고 블록 전체를 기울이므로 블록 안 좌석은 항상 반듯하게 정렬됨. */
+.seatBlocks {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  gap: 16px; /* 블록 사이 통로 */
 }
 
-.seatRowGroup {
+.seatLabelCol {
   display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.seatAisle {
-  width: 14px;
+  flex-direction: column;
+  gap: 6px;
+  width: 18px;
   flex-shrink: 0;
 }
 
+.seatBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-basis: 0;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+/* 양옆 블록 기울임 — 중앙 통로 쪽을 축으로 바깥쪽 끝이 무대에서 멀어지듯 내려감 */
+.seatBlockLeft {
+  transform: rotate(-2.5deg);
+  transform-origin: center right;
+}
+
+.seatBlockRight {
+  transform: rotate(2.5deg);
+  transform-origin: center left;
+}
+
+.seatBlockRow {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 3px;
+  height: 20px;
+}
+
 .seatRowLabel {
-  width: 18px;
+  height: 20px;
   text-align: center;
   font-size: 10px;
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .seat {
-  width: 13px;
-  height: 13px;
+  width: 100%;
+  height: 100%;
+  min-height: 6px;
   border-radius: 2px;
   border: none;
   cursor: pointer;
   font-size: 0;
   font-family: inherit;
   font-weight: 600;
-  /* 곡선 오프셋은 JS 에서 --seat-y 로 전달, hover/선택 시 스케일과 함께 적용 */
-  transform: translateY(var(--seat-y, 0px));
   transition: transform 0.1s, opacity 0.1s;
   display: flex;
   align-items: center;
@@ -688,12 +728,12 @@ a {
 .seatReserved      { background: var(--border);  color: var(--text-3);    cursor: not-allowed; }
 .seatLocked        { background: var(--warning-bg); color: var(--warning); cursor: not-allowed; }
 
-.seat:hover:not(:disabled) { transform: translateY(var(--seat-y, 0px)) scale(1.5); opacity: 0.9; }
+.seat:hover:not(:disabled) { transform: scale(1.4); opacity: 0.9; }
 
 .seatSelected {
   outline: 2px solid #ffffff;
   outline-offset: 1px;
-  transform: translateY(var(--seat-y, 0px)) scale(1.5);
+  transform: scale(1.4);
 }
 
 /* ── SEAT DETAIL PANEL ── */
@@ -1069,6 +1109,7 @@ a {
 
 .adminPerfVenue { font-size: 11px; color: var(--text-2); margin-bottom: 2px; }
 .adminPerfRounds { font-size: 11px; color: var(--text-3); }
+.adminPerfRoundDetail { display: flex; flex-direction: column; gap: 1px; margin-top: 3px; padding: 4px 6px; background: var(--surface2); border-radius: 4px; font-size: 10px; color: var(--text-3); }
 
 .adminPerfActions {
   display: flex;
@@ -1269,7 +1310,6 @@ a {
   .mypageGrid { grid-template-columns: 1fr; }
   .profileCard { position: static; }
   .eventGrid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-  .seat { width: 22px; height: 22px; font-size: 9px; }
 }
 
 @media (max-width: 480px) {

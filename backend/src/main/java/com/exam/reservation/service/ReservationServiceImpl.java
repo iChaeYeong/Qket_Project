@@ -4,10 +4,12 @@ import com.exam.queue.service.QueueService;
 import com.exam.reservation.dto.ReservationDTO;
 import com.exam.reservation.mapper.ReservationMapper;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 /**
@@ -17,6 +19,21 @@ import java.util.Map;
  **/
 @Service
 public class ReservationServiceImpl implements ReservationService {
+
+    // 락을 "내가 잡은 락일 때만" 지우기 위한 compare-and-delete 스크립트
+    // (TTL 만료 후 다른 요청이 같은 키로 새 락을 잡았는데, 원래 요청이 뒤늦게 끝나면서
+    //  남의 락을 그냥 지워버리는 것을 방지 — RedisQueueRepository의 DELETE_IF_MATCHES와 동일한 패턴)
+    private static final DefaultRedisScript<Long> DELETE_IF_MATCHES =
+            new DefaultRedisScript<>(
+                    """
+                    if redis.call('get', KEYS[1]) == ARGV[1] then
+                        return redis.call('del', KEYS[1])
+                    else
+                        return 0
+                    end
+                    """,
+                    Long.class
+            );
 
     private final ReservationMapper reservationMapper;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -75,7 +92,14 @@ public class ReservationServiceImpl implements ReservationService {
 
             return Map.of("success", true, "message", "예매가 완료되었습니다.");
         } finally {
-            redisTemplate.delete(lockKey);
+            // 무조건 delete 하지 않고, 락 값이 내가 setIfAbsent 로 저장한 값(userId)과
+            // 일치할 때만 지움 — TTL(10초) 만료 후 다른 요청이 같은 좌석 락을 새로 잡았는데
+            // 이 요청이 뒤늦게 끝나면서 남의 락을 지워버리는 것을 방지
+            redisTemplate.execute(
+                    DELETE_IF_MATCHES,
+                    Collections.singletonList(lockKey),
+                    userId.toString()
+            );
         }
     }
     /***********************************

@@ -6,12 +6,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/***
-
+/**
  파일명     :   UserServiceImpl.java
  기능       :   userId와 같은 데이터가 있는지 조회
  param    :   String, String
- result   :   UserDTO  (유저정보)**/
+ result   :   UserDTO  (유저정보)
+ **/
+
 
 
 @Service
@@ -25,6 +26,7 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+
     /***
 
      이름      :   login
@@ -32,6 +34,7 @@ public class UserServiceImpl implements UserService {
      param    :   String, String
      result   :   UserDTO  (유저정보)
      **/@Override
+
     public UserDTO login(String userId, String pwd) {
         UserDTO user = userMapper.findById(userId);
         if (user == null) return null;
@@ -41,8 +44,9 @@ public class UserServiceImpl implements UserService {
         user.setPwd(null);
         return user;}
 
-    /***
 
+
+    /***********************************
      이름      :   register
      기능      :   유저정보 DB에 저장 후 처리한 행 갯수 반환
      param    :   UserDTO

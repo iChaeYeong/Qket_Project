@@ -32,6 +32,13 @@ spec:
                 name: redis-secrets
             - secretRef:
                 name: aws-secrets
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
 
 ---
 apiVersion: v1

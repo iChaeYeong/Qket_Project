@@ -60,6 +60,7 @@ jobs:
             --from-literal=REDIS_PORT=${{ vars.DEV_REDIS_PORT }} \
             --from-literal=AWS_REGION=${{ env.AWS_REGION }} \
             --from-literal=S3_BUCKET=${{ vars.DEV_S3_BUCKET }} \
+            --from-literal=CLOUDFRONT_DOMAIN=${{ vars.CLOUDFRONT_DOMAIN }} \
             -n ${{ env.K8S_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
 
       # Secret - GitHub Secrets 에서 DB/Redis 접속 정보 주입
@@ -129,11 +130,11 @@ jobs:
 
       - name: Verify backend deployment
         run: |
-          echo "************************************************************* Deployment"
+          echo "************************************************************* start Deployment"
           kubectl get deployment qket-backend -n ${{ env.K8S_NAMESPACE }}
-          echo *************************************************************  Pods"
+          echo *************************************************************  start Pods"
           kubectl get pods -l app=qket-backend -n ${{ env.K8S_NAMESPACE }}
-          echo *************************************************************  Image"
+          echo *************************************************************  start Image"
           kubectl get pod -l app=qket-backend -n ${{ env.K8S_NAMESPACE }} \
             -o jsonpath='{.items[0].spec.containers[0].image}'
 
@@ -180,10 +181,10 @@ jobs:
 
       - name: Verify frontend deployment
         run: |
-          echo "=== Deployment ==="
+          echo "************************************************************* Deployment"
           kubectl get deployment qket-frontend -n ${{ env.K8S_NAMESPACE }}
-          echo "=== Pods ==="
+          echo "************************************************************* Pods"
           kubectl get pods -l app=qket-frontend -n ${{ env.K8S_NAMESPACE }}
-          echo "=== Image ==="
+          echo "************************************************************* Image"
           kubectl get pod -l app=qket-frontend -n ${{ env.K8S_NAMESPACE }} \
             -o jsonpath='{.items[0].spec.containers[0].image}'

@@ -22,16 +22,7 @@ export default function BookButton({ roundId, openTime, roundTime, title }: Prop
   const router = useRouter();
   const { userSession } = useAuth();
 
-  const [state, setState] = useState<ButtonState>(() => {
-    const open = new Date(openTime).getTime();
-    const round = new Date(roundTime).getTime();
-    const now = Date.now();
-    if (now >= round) return "closed";
-    if (now >= open) return "open";
-    if (now >= open - 10 * 60 * 1000) return "pending";
-    return "Before";
-  });
-
+  const [state, setState] = useState<ButtonState>("Before");
 
   useEffect(() => {
     const open = new Date(openTime).getTime();
@@ -39,7 +30,7 @@ export default function BookButton({ roundId, openTime, roundTime, title }: Prop
 
     const check = () => {
       const now = Date.now();
-      if (now >= round) {
+if (now >= round) {
         setState("closed");
       } else if (now >= open) {
         setState("open");
@@ -78,6 +69,8 @@ export default function BookButton({ roundId, openTime, roundTime, title }: Prop
           onClick={() => {
             const now = new Date().toLocaleString("ko-KR");
             alert(`예매 오픈 전입니다.\n현재 시각: ${now}\n오픈 시각: ${new Date(openTime).toLocaleString("ko-KR")}`);
+            console.log(`예매 오픈 전입니다.\n현재 시각: ${now}\n오픈 시각: ${new Date(openTime).toLocaleString("ko-KR")}`);
+
           }}
         >
           예매하기
@@ -86,6 +79,10 @@ export default function BookButton({ roundId, openTime, roundTime, title }: Prop
       </div>
     );
   }
+
+  if (state === "closed") return (
+    <span className="badge badgeClosed">예매 마감</span>
+  );
 
   // [BOOK-OPEN] 오픈 이후 — 로그인 확인 후 대기열 페이지로 이동
   const handleBook = () => {

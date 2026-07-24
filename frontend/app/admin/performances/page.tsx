@@ -4,14 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
-  getVenues,
   addRound,
   updatePerformance,
-  updateRound,
   deletePerformance,
   deleteRound,
   uploadPoster,
-  type Venue,
 } from "@/lib/api/admin";
 import type { Performance, PerformanceRound } from "@/lib/data/types";
 
@@ -34,7 +31,6 @@ export default function AdminPerformancesPage() {
   const { userSession, isLoading } = useAuth();
 
   const [performances, setPerformances] = useState<Performance[]>([]);
-  const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
 
   // 수정 모달
@@ -61,11 +57,9 @@ export default function AdminPerformancesPage() {
       router.replace("/");
       return;
     }
-    Promise.all([
-      fetch("/api/events", { credentials: "include" }).then(r => r.json()),
-      getVenues(),
-    ])
-      .then(([perfs, vs]) => { setPerformances(perfs); setVenues(vs); })
+    fetch("/api/events", { credentials: "include" })
+      .then(r => r.json())
+      .then(perfs => setPerformances(perfs))
       .finally(() => setLoading(false));
   }, [isLoading, userSession]);
 
@@ -109,19 +103,16 @@ export default function AdminPerformancesPage() {
     if (!editTitle.trim()) { editTitleRef.current?.focus(); setEditMsg({ text: "제목을 입력하세요.", ok: false }); return; }
     setEditSaving(true);
     try {
-      // 공연 정보 저장
-      await updatePerformance(editingPerf.performanceId, { pTitle: editTitle, posterUrl: editPosterUrl });
-
-      // 변경된 회차 저장 (오픈 전 회차만)
       const unlockedRounds = (editingPerf.rounds ?? []).filter(r => new Date(r.openTime) > new Date());
-      await Promise.all(
-        unlockedRounds.map(r =>
-          updateRound(editingPerf.performanceId, r.roundId, {
-            roundTime: toMysqlDatetime(roundEdits[r.roundId]?.roundTime ?? toInputDatetime(r.roundTime)),
-            openTime: toMysqlDatetime(roundEdits[r.roundId]?.openTime ?? toInputDatetime(r.openTime)),
-          })
-        )
-      );
+      await updatePerformance(editingPerf.performanceId, {
+        pTitle: editTitle,
+        posterUrl: editPosterUrl,
+        rounds: unlockedRounds.map(r => ({
+          roundId: r.roundId,
+          roundTime: toMysqlDatetime(roundEdits[r.roundId]?.roundTime ?? toInputDatetime(r.roundTime)),
+          openTime: toMysqlDatetime(roundEdits[r.roundId]?.openTime ?? toInputDatetime(r.openTime)),
+        })),
+      });
 
       setPerformances(prev =>
         prev.map(p => p.performanceId === editingPerf.performanceId
@@ -214,12 +205,20 @@ export default function AdminPerformancesPage() {
                 {perf.posterUrl
                   ? <img src={perf.posterUrl} alt={perf.pTitle} />
                   : <div className="adminPerfPosterEmpty" />}
-                {locked && <span className="adminPerfLock">🔒</span>}
               </div>
               <div className="adminPerfInfo">
                 <p className="adminPerfTitle">{perf.pTitle}</p>
-                <p className="adminPerfVenue">📍 {perf.pLocation}</p>
+                <p className="adminPerfVenue">{perf.pLocation}</p>
                 <p className="adminPerfRounds">{perf.rounds?.length ?? 0}회차</p>
+                {(perf.rounds ?? []).map((r) => {
+                  const roundLocked = new Date(r.openTime) <= new Date();
+                  return (
+                    <div key={r.roundId} className="adminPerfRoundDetail">
+                      <span>공연 {toInputDatetime(r.roundTime).replace("T", " ")}</span>
+                      <span>예매 {toInputDatetime(r.openTime).replace("T", " ")} {roundLocked && "🔒"}</span>
+                    </div>
+                  );
+                })}
               </div>
               <div className="adminPerfActions">
                 <button className="btnSecondary" onClick={() => openEdit(perf)}>수정</button>
