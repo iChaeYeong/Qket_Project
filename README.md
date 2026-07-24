@@ -162,3 +162,7 @@ kubectl apply -f k8s/deploy_https_qKet_frontend.yaml
 kubectl apply -f k8s/ingress_https_qket.yaml
 ```
 
+- 기능 추가: `feat: 회원가입 기능 추가`
+- 버그 수정: `fix: 로그인 오류 수정`
+- 문서 수정: `docs: API 문서 업데이트`
+- 코드 리팩토링: `refactor: 로그인 로직 개선`
