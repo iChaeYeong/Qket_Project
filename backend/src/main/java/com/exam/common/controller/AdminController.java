@@ -45,7 +45,7 @@ public class AdminController {
 
     /***********************************
      *  URL      :   "/upload"
-     *  이름      :   포스터 이미지 S3 업로드
+     *  이름      :   포스터 이미지 업로드
      *  기능      :   포스터 이미지 S3 업로드
      *  method   :   Post
      *  param    :   MultipartFile, HttpSession
@@ -93,7 +93,7 @@ public class AdminController {
 
     /***********************************
      *  URL      :   "/roles"
-     *  이름      :   역할 목록
+     *  이름      :   역할 목록 조회
      *  기능      :   역할 목록보기
      *  method   :   Get
      *  param    :   HttpSession
@@ -123,6 +123,14 @@ public class AdminController {
         return ResponseEntity.ok(userMapper.findAll());
     }
 
+    /***********************************
+     *  URL      :   "/users/{userId}"
+     *  이름      :   사용자 정보 수정
+     *  기능      :   관리자가 사용자의 상태 및 권한을 수정
+     *  method   :   Patch
+     *  param    :   String, UserDTO, HttpSession
+     *  return   :   ResponseEntity<?>
+     ************************************/
     // 사용자 상태/권한 수정 — 관리자(3)만
     @PatchMapping("/users/{userId}")
     public ResponseEntity<?> updateUser(@PathVariable String userId,
@@ -135,6 +143,14 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("success", true));
     }
 
+    /***********************************
+     *  URL      :   "/users/batch"
+     *  이름      :   사용자 정보 일괄 수정
+     *  기능      :   관리자가 사용자 상태 및 권한 일괄 수정
+     *  method   :   Patch
+     *  param    :   List<UserDTO>, HttpSession
+     *  return   :   ResponseEntity<?>
+     ************************************/
     // 사용자 상태/권한 일괄 수정 — 관리자(3)만
     @PatchMapping("/users/batch")
     public ResponseEntity<?> batchUpdateUsers(@RequestBody List<UserDTO> users, HttpSession session) {
@@ -148,8 +164,8 @@ public class AdminController {
 
     /***********************************
      *  URL      :   "/venues"
-     *  이름      :   공연장 목록
-     *  기능      :   공연장 목록보기
+     *  이름      :   공연장 목록 조회
+     *  기능      :   공연장 목록 조회
      *  method   :   Get
      *  param    :   HttpSession
      *  return   :   ResponseEntity<?>
@@ -162,6 +178,14 @@ public class AdminController {
         return ResponseEntity.ok(performanceMapper.findAllVenues());
     }
 
+    /***********************************
+     *  URL      :   "/events"
+     *  이름      :   공연 등록
+     *  기능      :   새로운 공연과 회차를 등록
+     *  method   :   Post
+     *  param    :   PerformanceDTO, HttpSession
+     *  return   :   ResponseEntity<?>
+     ************************************/
     // 공연 추가 (회차 포함) — 매니저(2) 이상
     @Transactional
     @PostMapping("/events")
@@ -179,6 +203,14 @@ public class AdminController {
         return ResponseEntity.ok(Map.of("success", true, "performanceId", dto.getPerformanceId()));
     }
 
+    /***********************************
+     *  URL      :   "/events/{performanceId}"
+     *  이름      :   공연 및 회차 수정
+     *  기능      :   공연 수정 (제목, 포스터, 회차 포함)
+     *  method   :   Put
+     *  param    :   Long, PerformanceDTO, HttpSession
+     *  return   :   ResponseEntity<?>
+     ************************************/
     // 공연 수정 (제목, 포스터, 회차 포함) — 매니저(2) 이상
     @Transactional
     @PutMapping("/events/{performanceId}")
@@ -247,7 +279,7 @@ public class AdminController {
 
     /***********************************
      *  URL      :   "/events/{performanceId}/rounds/{roundId}"
-     *  이름      :   회차 삭제
+     *  이름      :   공연 회차 삭제
      *  기능      :   회차 삭제 — 오픈 시간 지나면 거부
      *  method   :   Put
      *  param    :   Long, Long, HttpSession
@@ -271,7 +303,7 @@ public class AdminController {
 
     /***********************************
      *  URL      :   "/events/{performanceId}/rounds"
-     *  이름      :   회차 추가
+     *  이름      :   공연 회차 추가
      *  기능      :   회차 추가 + 예약 슬롯 초기화
      *  method   :   Post
      *  param    :   Long, RoundDTO, HttpSession
