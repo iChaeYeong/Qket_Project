@@ -23,12 +23,19 @@ spec:
     spec:
       containers:
         - name: qket-backend
-          # GitHub Actions에서 sed 로 치환
+          # GitHub Actions에서 가져온 값
           # sed -i "s|BACKEND_IMAGE|$REGISTRY/$REPOSITORY:$IMAGE_TAG|g"
           image: BACKEND_IMAGE
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /api/actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            failureThreshold: 6
           envFrom:
             - configMapRef:
                 name: app-config # env_qKet.yaml의 ConfigMap
