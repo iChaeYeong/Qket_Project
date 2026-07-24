@@ -42,7 +42,7 @@ export default async function EventsPage() {
     <div className="pageWrap">
       <div className="pageHeader">
         <h1 className="pageTitle">공연 목록</h1>
-        {/* <p className="pageSubtitle">테스트서버 입니다.</p> */}
+        <p className="pageSubtitle">테스트서버 입니다.!!!!!!!!!!!!</p>
         <p className="pageSubtitle">예매하고 싶은 공연을 선택하세요.</p>
       </div>
 
