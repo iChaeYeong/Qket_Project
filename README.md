@@ -25,6 +25,7 @@
 ## API 명세서
 
 ![API명세서](docs/API명세서.png)
+
 ![API명세서2](docs/API명세서2.png)
 
 ---
